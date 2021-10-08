@@ -31,7 +31,7 @@
         "laminas/laminas-paginator": "^2.5",
         "laminas/laminas-cache": "^2.5",
         "laminas/laminas-text": "^2.5",
-        "laminas/laminas-json": "^2.5"
+        "laminas/laminas-json": "^2.2"
     },
     
     "require-dev": {
