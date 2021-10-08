@@ -45,7 +45,7 @@
         "zendframework/zend-db": "~2.5",
         "zendframework/zend-i18n": "~2.5",
         "zendframework/zend-text": "~2.5",
-        "zendframework/zend-json": "~2.5",
+        "zendframework/zend-json": "~2.2",
         "zendframework/zend-coding-standard": "~1.0",
 
         "phpoffice/phpexcel": "^1.8",
