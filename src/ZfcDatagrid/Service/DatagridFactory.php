@@ -2,10 +2,12 @@
 namespace ZfcDatagrid\Service;
 
 use InvalidArgumentException;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 use ZfcDatagrid\Datagrid;
 use ZfcDatagrid\Middleware\RequestHelper;
+use ZfcDatagrid\Router\RouterInterface;
+use ZfcDatagrid\Translator\TranslatorInterface;
 
 class DatagridFactory implements FactoryInterface
 {
@@ -24,19 +26,19 @@ class DatagridFactory implements FactoryInterface
             throw new InvalidArgumentException('Config key "ZfcDatagrid" is missing');
         }
 
-        /* @var $application \Zend\Mvc\Application */
-        //$application = $container->get('application');
-
         /** @var RequestHelper $requestHelper */
         $requestHelper = $container->get(RequestHelper::class);
 
+        $request = $requestHelper->getRequest();
+        $router = $container->get(RouterInterface::class);
+
         $grid = new Datagrid();
         $grid->setOptions($config['ZfcDatagrid']);
-        $grid->setRequest($requestHelper->getRequest());
-        $grid->setRouter($container->get('Router'));
+        $grid->setRequest($request);
+        $grid->setRouter($router);
 
-        if (true === $container->has('translator')) {
-            $grid->setTranslator($container->get('translator'));
+        if (true === $container->has(TranslatorInterface::class)) {
+            $grid->setTranslator($container->get(TranslatorInterface::class));
         }
 
         $grid->setRendererService($container->get('zfcDatagrid.renderer.' . $grid->getRendererName()));

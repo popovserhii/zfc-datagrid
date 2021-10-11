@@ -1,7 +1,8 @@
 <?php
 namespace ZfcDatagrid\Renderer\JqGrid;
 
-use Laminas\Http\PhpEnvironment\Request as HttpRequest;
+//use Laminas\Http\PhpEnvironment\Request as HttpRequest;
+use Psr\Http\Message\ServerRequestInterface as HttpRequestInterface;
 use Laminas\View\Model\JsonModel;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Renderer\AbstractRenderer;
@@ -37,14 +38,14 @@ class Renderer extends AbstractRenderer
     }
 
     /**
-     * @return HttpRequest
+     * @return HttpRequestInterface
      *
      * @throws \Exception
      */
-    public function getRequest(): HttpRequest
+    public function getRequest(): HttpRequestInterface
     {
         $request = parent::getRequest();
-        if (! $request instanceof HttpRequest) {
+        if (! $request instanceof HttpRequestInterface) {
             throw new \Exception(
                 'Request must be an instance of Laminas\Http\PhpEnvironment\Request for HTML rendering'
             );
@@ -73,14 +74,28 @@ class Renderer extends AbstractRenderer
 
         $sortConditions = [];
 
-        $sortColumns    = $request->getPost(
-            $parameterNames['sortColumns'],
-            $request->getQuery($parameterNames['sortColumns'])
-        );
-        $sortDirections = $request->getPost(
-            $parameterNames['sortDirections'],
-            $request->getQuery($parameterNames['sortDirections'])
-        );
+        //$query = explode($request->getUri()->getQuery());
+
+        $postParams = $request->getParsedBody();
+        $queryParams = $request->getQueryParams();
+
+        $sortColumns = $postParams[$parameterNames['sortColumns']]
+            ?? $queryParams[$parameterNames['sortColumns']]
+            ?? null;
+
+        $sortDirections = $postParams[$parameterNames['sortDirections']]
+            ?? $queryParams[$parameterNames['sortDirections']]
+            ?? null;
+
+        #$sortColumns    = $request->getPost(
+        #    $parameterNames['sortColumns'],
+        #    $request->getQuery($parameterNames['sortColumns'])
+        #);
+        #$sortDirections = $request->getPost(
+        #    $parameterNames['sortDirections'],
+        #    $request->getQuery($parameterNames['sortDirections'])
+        #);
+
         if ($sortColumns != '') {
             $sortColumns    = explode(',', $sortColumns);
             $sortDirections = explode(',', $sortDirections);
@@ -138,14 +153,21 @@ class Renderer extends AbstractRenderer
         $parameterNames  = $optionsRenderer['parameterNames'];
 
         $request  = $this->getRequest();
-        $isSearch = $request->getPost($parameterNames['isSearch'], $request->getQuery($parameterNames['isSearch']));
+        $postParams = $request->getParsedBody();
+        $queryParams = $request->getQueryParams();
+
+        $isSearch = $postParams[$parameterNames['isSearch']]
+            ?? $queryParams[$parameterNames['isSearch']]
+            ?? null;
+
+        #$isSearch = $request->getPost($parameterNames['isSearch'], $request->getQuery($parameterNames['isSearch']));
         if ('true' == $isSearch) {
             // User filtering
+            /* @var $column \ZfcDatagrid\Column\AbstractColumn */
             foreach ($this->getColumns() as $column) {
-                /* @var $column \ZfcDatagrid\Column\AbstractColumn */
-                if ($request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId())) != '') {
-                    $value = $request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId()));
-
+                $value = $postParams[$column->getUniqueId()] ?? $queryParams[$column->getUniqueId()] ?? null;
+                #$value = $request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId()));
+                if ($value != '') {
                     $filter = new \ZfcDatagrid\Filter();
                     $filter->setFromColumn($column, $value);
 

@@ -4,6 +4,9 @@ use ZfcDatagrid\Datagrid;
 use ZfcDatagrid\Renderer;
 use ZfcDatagrid\Service;
 use ZfcDatagrid\Middleware;
+use ZfcDatagrid\Router;
+use ZfcDatagrid\Translator;
+use Laminas\Db\Adapter\Adapter;
 use Laminas\Cache\Storage;
 use Laminas\ServiceManager\Factory\InvokableFactory;
 
@@ -208,8 +211,10 @@ return [
         'factories' => [
             Datagrid::class => Service\DatagridFactory::class,
 
-            'zfcDatagrid_dbAdapter' => Service\LaminasDbAdapterFactory::class,
-            //Middleware\RequestHelper::class => Middleware\RequestHelperFactory::class,
+            Adapter::class => Service\LaminasDbAdapterFactory::class,
+            Middleware\RequestHelper::class => Middleware\RequestHelperFactory::class,
+            Router\RouterInterface::class => Router\RouterFactory::class,
+            Translator\TranslatorInterface::class => Translator\TranslatorFactory::class,
 
             // HTML renderer
             Renderer\BootstrapTable\Renderer::class => InvokableFactory::class,
@@ -227,6 +232,7 @@ return [
 
         'aliases' => [
             'zfcDatagrid' => Datagrid::class,
+            'zfcDatagrid_dbAdapter' => Adapter::class,
 
             // HTML renderer
             'zfcDatagrid.renderer.bootstrapTable' => Renderer\BootstrapTable\Renderer::class,

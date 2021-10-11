@@ -1,7 +1,7 @@
 <?php
 namespace ZfcDatagrid\Renderer\BootstrapTable\View\Helper;
 
-use Laminas\I18n\Translator\TranslatorInterface;
+use ZfcDatagrid\Translator\TranslatorInterface;
 use Laminas\View\Helper\AbstractHelper;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Column\Action\AbstractAction;

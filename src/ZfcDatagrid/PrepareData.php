@@ -1,8 +1,10 @@
 <?php
 namespace ZfcDatagrid;
 
-use Laminas\I18n\Translator\TranslatorInterface;
-use Laminas\Router\RouteStackInterface;
+#use Laminas\I18n\Translator\TranslatorInterface;
+#use Laminas\Router\RouterInterface;
+use ZfcDatagrid\Router\RouterInterface;
+use ZfcDatagrid\Translator\TranslatorInterface;
 use function is_array;
 use function array_walk_recursive;
 use function is_object;
@@ -26,7 +28,7 @@ class PrepareData
     /** @var TranslatorInterface|null */
     private $translator;
 
-    /** @var \Laminas\Router\RouteStackInterface */
+    /** @var RouterInterface */
     private $router;
 
     /**
@@ -82,7 +84,9 @@ class PrepareData
             return $this->data;
         }
 
-        $this->prepare();
+        if (!$this->dataPrepared) {
+            $this->prepare();
+        }
 
         return $this->dataPrepared;
     }
@@ -128,11 +132,11 @@ class PrepareData
     }
 
     /**
-     * @param RouteStackInterface $router
+     * @param RouterInterface $router
      *
      * @return $this
      */
-    public function setRouter(RouteStackInterface $router): self
+    public function setRouter(RouterInterface $router): self
     {
         $this->router = $router;
 
@@ -140,9 +144,9 @@ class PrepareData
     }
 
     /**
-     * @return RouteStackInterface
+     * @return RouterInterface
      */
-    public function getRouter(): ?RouteStackInterface
+    public function getRouter(): ?RouterInterface
     {
         return $this->router;
     }
@@ -260,7 +264,7 @@ class PrepareData
                 if ($col->hasFormatters() === true) {
                     foreach ($col->getFormatters() as $formatter) {
                         if ($formatter instanceof Column\Formatter\RouterInterface
-                            && $this->getRouter() instanceof RouteStackInterface
+                            && $this->getRouter() instanceof RouterInterface
                         ) {
                             /** @var Column\Formatter\RouterInterface */
                             $formatter->setRouter($this->getRouter());

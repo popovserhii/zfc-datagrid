@@ -4,21 +4,20 @@ namespace ZfcDatagrid;
 use ArrayIterator;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\QueryBuilder;
+use Psr\Http\Message\ServerRequestInterface as RequestInterface;
 use Laminas\Cache;
 use Laminas\Console\Request as ConsoleRequest;
 use Laminas\Db\Sql\Select as LaminasSelect;
-use Laminas\Http\PhpEnvironment\Request as HttpRequest;
-use Laminas\I18n\Translator\TranslatorInterface;
 use Laminas\Mvc\MvcEvent;
 use Laminas\Paginator\Paginator;
-use Laminas\Router\RouteStackInterface;
 use Laminas\Session\Container as SessionContainer;
-use Laminas\Stdlib\RequestInterface;
 use Laminas\Stdlib\ResponseInterface;
 use Laminas\View\Model\JsonModel;
 use Laminas\View\Model\ViewModel;
+use ZfcDatagrid\Translator\TranslatorInterface;
 use ZfcDatagrid\Column\Style;
 use ZfcDatagrid\DataSource\DataSourceInterface;
+use ZfcDatagrid\Router\RouterInterface;
 use function md5;
 use function preg_replace;
 use function is_array;
@@ -77,7 +76,7 @@ class Datagrid
     /** @var TranslatorInterface|null */
     protected $translator;
 
-    /** @var RouteStackInterface */
+    /** @var RouterInterface */
     protected $router;
 
     /** @var string */
@@ -323,28 +322,6 @@ class Datagrid
     }
 
     /**
-     * @param MvcEvent $mvcEvent
-     * @return $this
-     * @deprecated
-     */
-    public function setMvcEvent(MvcEvent $mvcEvent)
-    {
-        $this->mvcEvent = $mvcEvent;
-        $this->request  = $mvcEvent->getRequest();
-
-        return $this;
-    }
-
-    /**
-     * @return MvcEvent|null
-     * @deprecated
-     */
-    public function getMvcEvent(): ?MvcEvent
-    {
-        return $this->mvcEvent;
-    }
-
-    /**
      * @return RequestInterface|null
      */
     public function getRequest(): ?RequestInterface
@@ -390,11 +367,11 @@ class Datagrid
     }
 
     /**
-     * @param RouteStackInterface $router
+     * @param RouterInterface $router
      *
      * @return $this
      */
-    public function setRouter(RouteStackInterface $router): self
+    public function setRouter(RouterInterface $router): self
     {
         $this->router = $router;
 
@@ -402,9 +379,9 @@ class Datagrid
     }
 
     /**
-     * @return RouteStackInterface
+     * @return RouterInterface
      */
-    public function getRouter(): RouteStackInterface
+    public function getRouter(): RouterInterface
     {
         return $this->router;
     }
@@ -907,8 +884,8 @@ class Datagrid
         }
 
         // From request
-        if ($this->getRequest() instanceof HttpRequest && $this->getRequest()->getQuery($parameterName) != '') {
-            $rendererName = $this->getRequest()->getQuery($parameterName);
+        if (isset($this->getRequest()->getQueryParams()[$parameterName])) {
+            $rendererName = $this->getRequest()->getQueryParams()[$parameterName];
         }
 
         return $rendererName;
@@ -932,13 +909,12 @@ class Datagrid
                     );
                 }
                 $renderer->setOptions($this->getOptions());
-                #$renderer->setMvcEvent($this->getMvcEvent());
                 $renderer->setRequest($this->getRequest());
                 if ($this->getToolbarTemplate() !== null) {
                     $renderer->setToolbarTemplate($this->getToolbarTemplate());
                 }
                 $renderer->setToolbarTemplateVariables($this->getToolbarTemplateVariables());
-                $renderer->setViewModel($this->getViewModel());
+                ###$renderer->setViewModel($this->getViewModel());
                 if ($this->hasTranslator()) {
                     $renderer->setTranslator($this->getTranslator());
                 }
@@ -976,7 +952,7 @@ class Datagrid
     public function loadData()
     {
         if (true === $this->isDataLoaded) {
-            return true;
+            return $this->preparedData;
         }
 
         if ($this->isInit() !== true) {
@@ -1012,9 +988,9 @@ class Datagrid
                 $this->getDataSource()->addSortCondition($condition['column'], $condition['sortDirection']);
             }
 
-                /*
-                 * Step 1.3) Filtering
-                 */
+            /*
+             * Step 1.3) Filtering
+             */
             foreach ($renderer->getFilters() as $filter) {
                 $this->getDataSource()->addFilter($filter);
             }
@@ -1086,7 +1062,7 @@ class Datagrid
          * Step 3) Format the data - Translate - Replace - Date / time / datetime - Numbers - ...
          */
         $prepareData = new PrepareData($data, $this->getColumns());
-        if ($this->getRouter() instanceof RouteStackInterface) {
+        if ($this->getRouter() instanceof RouterInterface) {
             $prepareData->setRouter($this->getRouter());
         }
 
@@ -1098,6 +1074,8 @@ class Datagrid
         $this->preparedData = $prepareData->getData();
 
         $this->isDataLoaded = true;
+
+        return $this->preparedData;
     }
 
     /**
@@ -1117,7 +1095,7 @@ class Datagrid
         $renderer->setTitle($this->getTitle());
         $renderer->setPaginator($this->getPaginator());
         $renderer->setData($this->getPreparedData());
-        $renderer->prepareViewModel($this);
+        $vars = $renderer->prepareViewModel($this);
 
         $this->response = $renderer->execute();
 
@@ -1259,7 +1237,7 @@ class Datagrid
      *
      * @return bool
      */
-    public function isHtmlInitReponse(): bool
+    public function isHtmlInitResponse(): bool
     {
         return ! $this->getResponse() instanceof JsonModel && ! $this->getResponse() instanceof ResponseInterface;
     }

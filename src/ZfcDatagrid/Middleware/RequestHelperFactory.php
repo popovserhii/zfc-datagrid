@@ -10,17 +10,23 @@ declare(strict_types=1);
 namespace ZfcDatagrid\Middleware;
 
 use Psr\Container\ContainerInterface;
+use Laminas\Psr7Bridge\Psr7ServerRequest;
+use Laminas\Http\Request as LaminasRequest;
 
 class RequestHelperFactory
 {
     /**
      * Create a RequestHelper instance.
      */
-    public function __invoke(ContainerInterface $container) : RequestHelper
+    public function __invoke(ContainerInterface $container)
     {
         $request = $container->has('application')
             ? $container->get('application')->getMvcEvent()->getRequest()
             : null;
+
+        if ($request instanceof LaminasRequest) {
+            $request = Psr7ServerRequest::fromLaminas($request);
+        }
 
         return new RequestHelper($request);
     }

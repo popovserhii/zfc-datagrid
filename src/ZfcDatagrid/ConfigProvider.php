@@ -14,7 +14,6 @@ class ConfigProvider
         }
         $config['dependencies'] = $config['service_manager'];
         unset($config['service_manager']);
-        //unset($config['controller_plugins']);
 
         return $config;
     }

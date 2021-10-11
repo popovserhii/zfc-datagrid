@@ -3,7 +3,7 @@ namespace ZfcDatagrid\Renderer;
 
 use InvalidArgumentException;
 use Laminas\Cache;
-use Laminas\I18n\Translator\TranslatorInterface;
+use ZfcDatagrid\Translator\TranslatorInterface;
 use Laminas\Mvc\MvcEvent;
 use Laminas\Paginator\Paginator;
 use Laminas\View\Model\ViewModel;
@@ -694,44 +694,45 @@ abstract class AbstractRenderer implements RendererInterface
      */
     public function prepareViewModel(Datagrid $grid)
     {
-        $viewModel = $this->getViewModel();
+        $vars = [];
+        //$viewModel = $this->getViewModel();
 
-        $viewModel->setVariable('gridId', $grid->getId());
-        $viewModel->setVariable('title', $this->getTitle());
-        $viewModel->setVariable('parameters', $grid->getParameters());
-        $viewModel->setVariable('overwriteUrl', $grid->getUrl());
+        $vars['gridId'] = $grid->getId();
+        $vars['title'] = $this->getTitle();
+        $vars['parameters'] = $grid->getParameters();
+        $vars['overwriteUrl'] = $grid->getUrl();
 
-        $viewModel->setVariable('templateToolbar', $this->getToolbarTemplate());
+        $vars['templateToolbar'] = $this->getToolbarTemplate();
         foreach ($this->getToolbarTemplateVariables() as $key => $value) {
-            $viewModel->setVariable($key, $value);
+            $vars[$key] = $value;
         }
-        $viewModel->setVariable('rendererName', $this->getName());
+        $vars['rendererName'] = $this->getName();
 
         $options               = $this->getOptions();
         $generalParameterNames = $options['generalParameterNames'];
-        $viewModel->setVariable('generalParameterNames', $generalParameterNames);
+        $vars['generalParameterNames'] = $generalParameterNames;
 
-        $viewModel->setVariable('columns', $this->getColumns());
+        $vars['columns'] = $this->getColumns();
 
-        $viewModel->setVariable('rowStyles', $grid->getRowStyles());
+        $vars['rowStyles'] = $grid->getRowStyles();
 
-        $viewModel->setVariable('paginator', $this->getPaginator());
-        $viewModel->setVariable('data', $this->getData());
-        $viewModel->setVariable('filters', $this->getFilters());
+        $vars['paginator'] = $this->getPaginator();
+        $vars['data'] = $this->getData();
+        $vars['filters'] = $this->getFilters();
 
-        $viewModel->setVariable('rowClickAction', $grid->getRowClickAction());
-        $viewModel->setVariable('massActions', $grid->getMassActions());
+        $vars['rowClickAction'] = $grid->getRowClickAction();
+        $vars['massActions'] = $grid->getMassActions();
 
-        $viewModel->setVariable('isUserFilterEnabled', $grid->isUserFilterEnabled());
+        $vars['isUserFilterEnabled'] = $grid->isUserFilterEnabled();
 
         /*
          * renderer specific parameter names
          */
         $optionsRenderer = $this->getOptionsRenderer();
-        $viewModel->setVariable('optionsRenderer', $optionsRenderer);
+        $vars['optionsRenderer'] = $optionsRenderer;
         if ($this->isExport() === false) {
             $parameterNames = $optionsRenderer['parameterNames'];
-            $viewModel->setVariable('parameterNames', $parameterNames);
+            $vars['parameterNames'] = $parameterNames;
 
             $activeParameters                                 = [];
             $activeParameters[$parameterNames['currentPage']] = $this->getCurrentPageNumber();
@@ -746,10 +747,12 @@ abstract class AbstractRenderer implements RendererInterface
                 $activeParameters[$parameterNames['sortColumns']]    = implode(',', $sortColumns);
                 $activeParameters[$parameterNames['sortDirections']] = implode(',', $sortDirections);
             }
-            $viewModel->setVariable('activeParameters', $activeParameters);
+            $vars['activeParameters'] = $activeParameters;
         }
 
-        $viewModel->setVariable('exportRenderers', $grid->getExportRenderers());
+        $vars['exportRenderers'] = $grid->getExportRenderers();
+
+        return $vars;
     }
 
     /**
