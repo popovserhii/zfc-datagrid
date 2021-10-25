@@ -26,7 +26,7 @@ class AbstractDataSourceTest extends TestCase
 
         $this->assertEquals([], $ds->getColumns());
         $this->assertEquals([], $ds->getSortConditions());
-        $this->assertEquals([], $ds->getFilters());
+        $this->assertEquals([], $ds->getFilterGroup());
         $this->assertNull($ds->getPaginatorAdapter());
     }
 
@@ -92,10 +92,10 @@ class AbstractDataSourceTest extends TestCase
 
         $this->assertEquals([
             $filter,
-        ], $ds->getFilters());
+        ], $ds->getFilterGroup());
 
         $ds->setFilters([]);
-        $this->assertEquals([], $ds->getFilters());
+        $this->assertEquals([], $ds->getFilterGroup());
     }
 
     public function testPaginatorAdapter()

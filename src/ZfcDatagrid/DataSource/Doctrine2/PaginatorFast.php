@@ -49,6 +49,7 @@ class PaginatorFast implements AdapterInterface
         $qb->setFirstResult($offset)->setMaxResults($itemCountPerPage);
 
         return $qb->getQuery()->getArrayResult();
+        #return $qb->getQuery()->getResult();
     }
 
     /**

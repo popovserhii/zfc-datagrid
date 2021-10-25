@@ -91,12 +91,13 @@ class Doctrine2 extends AbstractDataSource
          * Step 3) Apply filters
          */
         $filterColumn = new Doctrine2\Filter($qb);
-        foreach ($this->getFilters() as $filter) {
-            /* @var $filter \ZfcDatagrid\Filter */
+        /*foreach ($this->getFilters() as $filter) {
             if ($filter->isColumnFilter() === true) {
                 $filterColumn->applyFilter($filter);
             }
-        }
+        }*/
+        //$filterColumn->applyFilter($this->getFilters());
+        $filterColumn->applyFilters($this->getFilterGroup());
 
         /*
          * Step 4) Pagination

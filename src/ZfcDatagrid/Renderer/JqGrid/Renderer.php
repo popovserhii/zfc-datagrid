@@ -54,6 +54,33 @@ class Renderer extends AbstractRenderer
         return $request;
     }
 
+    public function getRequestParam($paramName)
+    {
+        $request = $this->getRequest();
+
+        $optionsRenderer = $this->getOptionsRenderer();
+        $parameterNames  = $optionsRenderer['parameterNames'];
+
+        $postParams = $request->getParsedBody();
+        $queryParams = $request->getQueryParams();
+
+        $sortColumns = $postParams[$parameterNames[$paramName]]
+            ?? $queryParams[$parameterNames[$paramName]]
+            ?? null;
+
+        return $sortColumns;
+    }
+
+    public function getSortColumns()
+    {
+        return $this->getRequestParam('sortColumns');
+    }
+
+    public function getSortDirections()
+    {
+        return $this->getRequestParam('sortDirections');
+    }
+
     /**
      * @see \ZfcDatagrid\Renderer\AbstractRenderer::getSortConditions()
      *
@@ -67,34 +94,8 @@ class Renderer extends AbstractRenderer
             return $this->sortConditions;
         }
 
-        $request = $this->getRequest();
-
-        $optionsRenderer = $this->getOptionsRenderer();
-        $parameterNames  = $optionsRenderer['parameterNames'];
-
-        $sortConditions = [];
-
-        //$query = explode($request->getUri()->getQuery());
-
-        $postParams = $request->getParsedBody();
-        $queryParams = $request->getQueryParams();
-
-        $sortColumns = $postParams[$parameterNames['sortColumns']]
-            ?? $queryParams[$parameterNames['sortColumns']]
-            ?? null;
-
-        $sortDirections = $postParams[$parameterNames['sortDirections']]
-            ?? $queryParams[$parameterNames['sortDirections']]
-            ?? null;
-
-        #$sortColumns    = $request->getPost(
-        #    $parameterNames['sortColumns'],
-        #    $request->getQuery($parameterNames['sortColumns'])
-        #);
-        #$sortDirections = $request->getPost(
-        #    $parameterNames['sortDirections'],
-        #    $request->getQuery($parameterNames['sortDirections'])
-        #);
+        $sortColumns = $this->getSortColumns();
+        $sortDirections = $this->getSortDirections();
 
         if ($sortColumns != '') {
             $sortColumns    = explode(',', $sortColumns);
@@ -140,14 +141,13 @@ class Renderer extends AbstractRenderer
      *
      * @throws \Exception
      */
-    public function getFilters(): array
+    public function getFilters()//: array
     {
         if (!empty($this->filters)) {
             // set from cache! (for export)
             return $this->filters;
         }
 
-        $filters = [];
 
         $optionsRenderer = $this->getOptionsRenderer();
         $parameterNames  = $optionsRenderer['parameterNames'];
@@ -160,17 +160,22 @@ class Renderer extends AbstractRenderer
             ?? $queryParams[$parameterNames['isSearch']]
             ?? null;
 
+        $filters = [];
         #$isSearch = $request->getPost($parameterNames['isSearch'], $request->getQuery($parameterNames['isSearch']));
         if ('true' == $isSearch) {
             // User filtering
-            /* @var $column \ZfcDatagrid\Column\AbstractColumn */
             foreach ($this->getColumns() as $column) {
-                $value = $postParams[$column->getUniqueId()] ?? $queryParams[$column->getUniqueId()] ?? null;
-                #$value = $request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId()));
-                if ($value != '') {
-                    $filter = new \ZfcDatagrid\Filter();
-                    $filter->setFromColumn($column, $value);
+                $values = $postParams['filters'] ?? $queryParams['filters'] ?? [];
+                $extendedFilters = $this->prepareFilter(json_decode($values ?? [], true));
 
+                $simpleFilter = $postParams[$column->getUniqueId()] ?? $queryParams[$column->getUniqueId()] ?? null;
+                #$value = $request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId()));
+                /* @var $column \ZfcDatagrid\Column\AbstractColumn */
+                if ($simpleFilter != '') {
+                    $filters[] = $this->createFilter($column, $simpleFilter);
+                } elseif ($extendedFilters !== null && isset($extendedFilters[$column->getUniqueId()])) {
+                    $simpleFilter = implode(',', $extendedFilters[$column->getUniqueId()]['values']);
+                    $filter = $this->createFilter($column, $simpleFilter);
                     $filters[] = $filter;
 
                     $column->setFilterActive($filter->getDisplayColumnValue());
@@ -188,21 +193,55 @@ class Renderer extends AbstractRenderer
         return $this->filters;
     }
 
-    /**
-     * @return int
-     * @throws \Exception
-     */
+    public function createFilter($column, $value)
+    {
+        /* @var $column \ZfcDatagrid\Column\AbstractColumn */
+        $filter = new \ZfcDatagrid\Filter();
+        $filter->setFromColumn($column, $value);
+        $column->setFilterActive($filter->getDisplayColumnValue());
+
+        return $filter;
+    }
+
+    public function prepareFilter($rawFilters)
+    {
+        if (!$rawFilters) {
+            return null;
+        }
+
+        static $fields = [];
+        foreach ($rawFilters as $key => $values) {
+            if ($values && $key === 'rules') {
+                foreach ($values as $rule) {
+                    if (!isset($fields[$rule['field']])) {
+                        $fields[$rule['field']] = [];
+                    }
+                    $fields[$rule['field']]['values'][] = $rule['data'];
+                }
+            }
+            if ($values && $key === 'groups') {
+                foreach ($values as $sub) {
+                    $this->prepareFilter($sub);
+                }
+            }
+        }
+
+        return $fields;
+    }
+
     public function getCurrentPageNumber(): int
     {
         $optionsRenderer = $this->getOptionsRenderer();
-        $parameterNames  = $optionsRenderer['parameterNames'];
+        $parameterNames = $optionsRenderer['parameterNames'];
 
         $request = $this->getRequest();
-        if ($request instanceof HttpRequest) {
-            $currentPage = $request->getPost(
-                $parameterNames['currentPage'],
-                $request->getQuery($parameterNames['currentPage'])
-            );
+        if ($request instanceof HttpRequestInterface) {
+            $postParams = $request->getParsedBody();
+            $queryParams = $request->getQueryParams();
+
+            $currentPage = $postParams[$parameterNames['currentPage']]
+                ?? $queryParams[$parameterNames['currentPage']]
+                ?? null;
             if ($currentPage != '') {
                 $this->currentPageNumber = (int) $currentPage;
             }
@@ -230,7 +269,7 @@ class Renderer extends AbstractRenderer
             $viewModel->setVariable('data', $this->getDataJqGrid());
 
             $columnsRowClickDisabled = [];
-            $columns                 = $viewModel->getVariable('columns');
+            $columns = $viewModel->getVariable('columns');
             foreach ($columns as $column) {
                 /* @var $column \ZfcDatagrid\Column\AbstractColumn */
 

@@ -90,9 +90,10 @@ abstract class AbstractDataSource implements DataSourceInterface
      *
      * @return $this
      */
-    public function addFilter(Filter $filter): DataSourceInterface
+    public function addFilter(/*Filter*/ $filter): DataSourceInterface
     {
-        $this->filters[] = $filter;
+        //$this->filters[] = $filter;
+        $this->filters = $filter;
 
         return $this;
     }
@@ -112,7 +113,7 @@ abstract class AbstractDataSource implements DataSourceInterface
     /**
      * @return Filter[]
      */
-    public function getFilters(): array
+    public function getFilterGroup()//: array
     {
         return $this->filters;
     }

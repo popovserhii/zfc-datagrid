@@ -45,7 +45,7 @@ interface DataSourceInterface
      *
      * @return $this
      */
-    public function addFilter(Filter $filter): self;
+    public function addFilter(/*Filter*/ $filter): self;
 
     /**
      * @return AdapterInterface

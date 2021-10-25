@@ -54,7 +54,7 @@ class PhpArray extends AbstractDataSource
         /*
          * Step 2) Apply filters
          */
-        foreach ($this->getFilters() as $filter) {
+        foreach ($this->getFilterGroup() as $filter) {
             /* @var $filter \ZfcDatagrid\Filter */
             if ($filter->isColumnFilter() === true) {
                 $data = array_filter($data, [

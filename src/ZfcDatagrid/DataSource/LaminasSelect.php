@@ -121,7 +121,7 @@ class LaminasSelect extends AbstractDataSource
          * Step 3) Apply filters
          */
         $filterColumn = new LaminasSelect\Filter($this->getAdapter(), $select);
-        foreach ($this->getFilters() as $filter) {
+        foreach ($this->getFilterGroup() as $filter) {
             /* @var $filter \ZfcDatagrid\Filter */
             if ($filter->isColumnFilter() === true) {
                 $filterColumn->applyFilter($filter);

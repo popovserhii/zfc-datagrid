@@ -28,6 +28,9 @@ abstract class AbstractColumn
     protected $isHidden = false;
 
     /** @var bool */
+    protected $isSkipped = false;
+
+    /** @var bool */
     protected $isIdentity = false;
 
     /** @var bool */
@@ -176,6 +179,30 @@ abstract class AbstractColumn
     public function isHidden(): bool
     {
         return $this->isHidden;
+    }
+
+    /**
+     * Return or note the column in a response.
+     *
+     * @param bool $mode
+     *
+     * @return $this
+     */
+    public function setSkipped(bool $mode = true): self
+    {
+        $this->isSkipped = $mode;
+
+        return $this;
+    }
+
+    /**
+     * Is this column hidden?
+     *
+     * @return bool
+     */
+    public function isSkipped(): bool
+    {
+        return $this->isSkipped;
     }
 
     /**

@@ -3,6 +3,7 @@ namespace ZfcDatagrid\Renderer;
 
 use InvalidArgumentException;
 use Laminas\Cache;
+use ZfcDatagrid\Column\AbstractColumn;
 use ZfcDatagrid\Translator\TranslatorInterface;
 use Laminas\Mvc\MvcEvent;
 use Laminas\Paginator\Paginator;
@@ -247,16 +248,24 @@ abstract class AbstractRenderer implements RendererInterface
         return $this->paginator;
     }
 
+    public function getColumn($uniqueId)
+    {
+        return $this->columns[$uniqueId] ?? false;
+    }
+
     /**
      * Set the columns.
      *
-     * @param array $columns
+     * @param AbstractColumn[] $columns
      *
      * @return $this
      */
     public function setColumns(array $columns): self
     {
-        $this->columns = $columns;
+        foreach ($columns as $column) {
+            $this->columns[$column->getUniqueId()] = $column;
+        }
+
 
         return $this;
     }
@@ -602,7 +611,7 @@ abstract class AbstractRenderer implements RendererInterface
     /**
      * @return Filter[]
      */
-    public function getFilters(): array
+    public function getFilters()//: array
     {
         if (!empty($this->filters)) {
             return $this->filters;

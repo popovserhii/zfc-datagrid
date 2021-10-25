@@ -8,7 +8,6 @@ use Psr\Http\Message\ServerRequestInterface as RequestInterface;
 use Laminas\Cache;
 use Laminas\Console\Request as ConsoleRequest;
 use Laminas\Db\Sql\Select as LaminasSelect;
-use Laminas\Mvc\MvcEvent;
 use Laminas\Paginator\Paginator;
 use Laminas\Session\Container as SessionContainer;
 use Laminas\Stdlib\ResponseInterface;
@@ -51,9 +50,6 @@ class Datagrid
     /** @var string */
     protected $cacheId;
 
-    /** @var MvcEvent */
-    protected $mvcEvent;
-
     /** @var array */
     protected $parameters = [];
 
@@ -93,7 +89,7 @@ class Datagrid
     protected $dataSource = null;
 
     /** @var int */
-    protected $defaulItemsPerPage = 25;
+    protected $defaultItemsPerPage = 25;
 
     /** @var array */
     protected $columns = [];
@@ -467,7 +463,7 @@ class Datagrid
      */
     public function setDefaultItemsPerPage(int $count = 25): self
     {
-        $this->defaulItemsPerPage = $count;
+        $this->defaultItemsPerPage = $count;
 
         return $this;
     }
@@ -477,7 +473,7 @@ class Datagrid
      */
     public function getDefaultItemsPerPage(): int
     {
-        return $this->defaulItemsPerPage;
+        return $this->defaultItemsPerPage;
     }
 
     /**
@@ -991,9 +987,10 @@ class Datagrid
             /*
              * Step 1.3) Filtering
              */
-            foreach ($renderer->getFilters() as $filter) {
+            /*foreach ($renderer->getFilters() as $filter) {
                 $this->getDataSource()->addFilter($filter);
-            }
+            }*/
+            $this->getDataSource()->addFilter($renderer->getFilters());
         }
 
         /*

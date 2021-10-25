@@ -14,7 +14,7 @@ interface RendererInterface
     /**
      * @return array
      */
-    public function getFilters(): array;
+    public function getFilters()/*: array*/;
 
     /**
      * Return the name of the renderer.

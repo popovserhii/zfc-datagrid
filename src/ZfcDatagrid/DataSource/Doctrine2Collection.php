@@ -92,7 +92,7 @@ class Doctrine2Collection extends AbstractDataSource
         $source = new SourceArray($dataPrepared);
         $source->setColumns($this->getColumns());
         $source->setSortConditions($this->getSortConditions());
-        $source->setFilters($this->getFilters());
+        $source->setFilters($this->getFilterGroup());
         $source->execute();
 
         $this->setPaginatorAdapter($source->getPaginatorAdapter());

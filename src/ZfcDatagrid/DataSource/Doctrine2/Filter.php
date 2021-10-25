@@ -5,6 +5,7 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Filter as DatagridFilter;
+use ZfcDatagrid\FilterGroup;
 use function sprintf;
 use function str_replace;
 
@@ -31,119 +32,145 @@ class Filter
         return $this->qb;
     }
 
+    public function applyFilters($filterGroup)
+    {
+        if (!$filterGroup) {
+            return;
+        }
+
+        $qb   = $this->getQueryBuilder();
+        $expr = $this->applyFilter($filterGroup);
+
+        FilterGroup::COND_AND === $filterGroup->getCondition()
+            ? $qb->andWhere($expr)
+            : $qb->orWhere($expr);
+    }
+
     /**
-     * @param DatagridFilter $filter
+     * @param FilterGroup $filterGroup
      *
      * @throws \Exception
      * @return $this
      */
-    public function applyFilter(DatagridFilter $filter): self
+    public function applyFilter(/*DatagridFilter*/ $filterGroup)
     {
         $qb   = $this->getQueryBuilder();
-        $expr = new Expr();
-
-        $col = $filter->getColumn();
-        if (! $col instanceof Column\Select) {
-            throw new \Exception('This column cannot be filtered: ' . $col->getUniqueId());
-        }
-
-        $colString = $col->getSelectPart1();
-        if ($col->getSelectPart2() != '') {
-            $colString .= '.' . $col->getSelectPart2();
-        }
-        if ($col instanceof Column\Select && $col->hasFilterSelectExpression()) {
-            $colString = sprintf($col->getFilterSelectExpression(), $colString);
-        }
-        $values = $filter->getValues();
+        $expr = $qb->expr();
 
         $wheres = [];
-        foreach ($values as $key => $value) {
-            $valueParameterName = ':' . str_replace('.', '', $col->getUniqueId() . $key);
+        foreach ($filterGroup->getFilters() as $filter) {
+            $column = $filter->getColumn();
+            if (!$column instanceof Column\Select) {
+                throw new \Exception('This column cannot be filtered: ' . $column->getUniqueId());
+            }
+            $colString = $column->getSelectPart1();
+            if ($column->getSelectPart2() != '') {
+                $colString .= '.' . $column->getSelectPart2();
+            }
+            if ($column instanceof Column\Select && $column->hasFilterSelectExpression()) {
+                $colString = sprintf($column->getFilterSelectExpression(), $colString);
+            }
 
-            switch ($filter->getOperator()) {
-                case DatagridFilter::LIKE:
-                    $wheres[] = $expr->like($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, '%' . $value . '%');
-                    break;
+            $values = $filter->getValues();
+            foreach ($values as $key => $value) {
+                $valueParameterName = ':' . str_replace('.', '', $column->getUniqueId() . $key);
+                switch ($filter->getOperator()) {
+                    case DatagridFilter::LIKE:
+                        $wheres[] = $expr->like($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, '%' . $value . '%');
 
-                case DatagridFilter::LIKE_LEFT:
-                    $wheres[] = $expr->like($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, '%' . $value);
-                    break;
+                        break;
+                    case DatagridFilter::LIKE_LEFT:
+                        $wheres[] = $expr->like($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, '%' . $value);
 
-                case DatagridFilter::LIKE_RIGHT:
-                    $wheres[] = $expr->like($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, $value . '%');
-                    break;
+                        break;
+                    case DatagridFilter::LIKE_RIGHT:
+                        $wheres[] = $expr->like($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $value . '%');
 
-                case DatagridFilter::NOT_LIKE:
-                    $wheres[] = $expr->notLike($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, '%' . $value . '%');
-                    break;
+                        break;
+                    case DatagridFilter::NOT_LIKE:
+                        $wheres[] = $expr->notLike($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, '%' . $value . '%');
 
-                case DatagridFilter::NOT_LIKE_LEFT:
-                    $wheres[] = $expr->notLike($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, '%' . $value);
-                    break;
+                        break;
+                    case DatagridFilter::NOT_LIKE_LEFT:
+                        $wheres[] = $expr->notLike($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, '%' . $value);
 
-                case DatagridFilter::NOT_LIKE_RIGHT:
-                    $wheres[] = $expr->notLike($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, $value . '%');
-                    break;
+                        break;
+                    case DatagridFilter::NOT_LIKE_RIGHT:
+                        $wheres[] = $expr->notLike($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $value . '%');
 
-                case DatagridFilter::EQUAL:
-                    $wheres[] = $expr->eq($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, $value);
-                    break;
+                        break;
+                    case DatagridFilter::EQUAL:
+                        $wheres[] = $expr->eq($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $value);
 
-                case DatagridFilter::NOT_EQUAL:
-                    $wheres[] = $expr->neq($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, $value);
-                    break;
+                        break;
+                    case DatagridFilter::NOT_EQUAL:
+                        $wheres[] = $expr->neq($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $value);
 
-                case DatagridFilter::GREATER_EQUAL:
-                    $wheres[] = $expr->gte($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, $value);
-                    break;
+                        break;
+                    case DatagridFilter::GREATER_EQUAL:
+                        $wheres[] = $expr->gte($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $value);
 
-                case DatagridFilter::GREATER:
-                    $wheres[] = $expr->gt($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, $value);
-                    break;
+                        break;
+                    case DatagridFilter::GREATER:
+                        $wheres[] = $expr->gt($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $value);
 
-                case DatagridFilter::LESS_EQUAL:
-                    $wheres[] = $expr->lte($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, $value);
-                    break;
+                        break;
+                    case DatagridFilter::LESS_EQUAL:
+                        $wheres[] = $expr->lte($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $value);
 
-                case DatagridFilter::LESS:
-                    $wheres[] = $expr->lt($colString, $valueParameterName);
-                    $qb->setParameter($valueParameterName, $value);
-                    break;
+                        break;
+                    case DatagridFilter::LESS:
+                        $wheres[] = $expr->lt($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $value);
 
-                case DatagridFilter::BETWEEN:
-                    $minParameterName = ':' . str_replace('.', '', $colString . '0');
-                    $maxParameterName = ':' . str_replace('.', '', $colString . '1');
+                        break;
+                    case DatagridFilter::IN:
+                        $wheres[] = $expr->in($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $values);
 
-                    $wheres[] = $expr->between($colString, $minParameterName, $maxParameterName);
+                        break 2;
+                    case DatagridFilter::BETWEEN:
+                        $minParameterName = ':' . str_replace('.', '', $colString . '0');
+                        $maxParameterName = ':' . str_replace('.', '', $colString . '1');
+                        $wheres[] = $expr->between($colString, $minParameterName, $maxParameterName);
+                        $qb->setParameter($minParameterName, $values[0]);
+                        $qb->setParameter($maxParameterName, $values[1]);
 
-                    $qb->setParameter($minParameterName, $values[0]);
-                    $qb->setParameter($maxParameterName, $values[1]);
-                    break 2;
-
-                default:
-                    throw new \InvalidArgumentException('This operator is currently not supported: '.$filter->getOperator());
-                    break;
+                        break 2;
+                    default:
+                        throw new \InvalidArgumentException(
+                            'This operator is currently not supported: ' . $filter->getOperator()
+                        );
+                }
             }
         }
 
         if (! empty($wheres)) {
-            $orWhere = $qb->expr()->orX();
-            $orWhere->addMultiple($wheres);
+            if ($groups = $filterGroup->getGroups()) {
+                foreach ($groups as $group) {
+                    //$exp->add($this->applyFilter($group));
+                    $wheres[] = $this->applyFilter($group);
+                }
+            }
 
-            $qb->andWhere($orWhere);
+            $expr = FilterGroup::COND_AND === $filterGroup->getCondition()
+                ? $expr->andX()
+                : $expr->orX();
+
+            $expr->addMultiple($wheres);
         }
 
-        return $this;
+        return $expr;
     }
 }
