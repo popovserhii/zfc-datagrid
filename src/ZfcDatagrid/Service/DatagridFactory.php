@@ -9,7 +9,7 @@ use ZfcDatagrid\Middleware\RequestHelper;
 use ZfcDatagrid\Router\RouterInterface;
 use ZfcDatagrid\Translator\TranslatorInterface;
 
-class DatagridFactory implements FactoryInterface
+class DatagridFactory
 {
     /**
      * @param ContainerInterface $container
