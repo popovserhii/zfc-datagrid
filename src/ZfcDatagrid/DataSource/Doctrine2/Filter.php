@@ -148,6 +148,14 @@ class Filter
                         $qb->setParameter($maxParameterName, $values[1]);
 
                         break 2;
+                    case DatagridFilter::NOT_NULL:
+                        $wheres[] = $expr->isNotNull($colString);
+
+                        break;
+                    case DatagridFilter::NULL:
+                        $wheres[] = $expr->isNull($colString);
+
+                        break;
                     default:
                         throw new \InvalidArgumentException(
                             'This operator is currently not supported: ' . $filter->getOperator()

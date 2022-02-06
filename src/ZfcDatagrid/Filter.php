@@ -63,6 +63,11 @@ class Filter
 
     const BETWEEN = '%s <> %s';
 
+    const NULL = ':isnull';
+
+    const NOT_NULL = ':isnotnull';
+
+
     /**
      * List of all available operations
      *
@@ -84,6 +89,8 @@ class Filter
         self::IN,
         self::NOT_IN,
         self::BETWEEN,
+        self::NULL,
+        self::NOT_NULL,
     ];
 
     /** @var Column\AbstractColumn|null */
@@ -239,7 +246,14 @@ class Filter
         } elseif (strpos($inputFilterValue, '<>') !== false) {
             $operator = self::BETWEEN;
             $value    = explode('<>', $inputFilterValue);
+        } elseif (substr(strtolower($inputFilterValue), 0, 10) == ':isnotnull') {
+            $operator = self::NOT_NULL;
+            $value = 'IS NOT NULL';
+        } elseif (substr(strtolower($inputFilterValue), 0, 7) == ':isnull') {
+            $operator = self::NULL;
+            $value = 'IS NULL';
         }
+
         $this->operator = $operator;
 
         if (false === $value) {
@@ -346,7 +360,7 @@ class Filter
      */
     public static function isApply($currentValue, $expectedValue, string $operator = self::EQUAL): bool
     {
-        list($currentValue, $expectedValue) = self::convertValues($currentValue, $expectedValue, $operator);
+        [$currentValue, $expectedValue] = self::convertValues($currentValue, $expectedValue, $operator);
 
         switch ($operator) {
             case self::LIKE:
