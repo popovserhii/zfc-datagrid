@@ -88,7 +88,7 @@ abstract class AbstractFormatter
      *
      * @return string
      */
-    public function format(AbstractColumn $column): string
+    public function format(AbstractColumn $column)
     {
         $data = $this->getRowData();
 
@@ -100,5 +100,5 @@ abstract class AbstractFormatter
      *
      * @return string
      */
-    abstract public function getFormattedValue(AbstractColumn $column): string;
+    abstract public function getFormattedValue(AbstractColumn $column);
 }

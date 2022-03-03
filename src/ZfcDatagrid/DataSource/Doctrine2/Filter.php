@@ -37,13 +37,13 @@ class Filter
         if (!$filterGroup) {
             return;
         }
-
-        $qb   = $this->getQueryBuilder();
-        $expr = $this->applyFilter($filterGroup);
-
-        FilterGroup::COND_AND === $filterGroup->getCondition()
-            ? $qb->andWhere($expr)
-            : $qb->orWhere($expr);
+        
+        $qb = $this->getQueryBuilder();
+        if ($expr = $this->applyFilter($filterGroup)) {
+            FilterGroup::COND_AND === $filterGroup->getCondition()
+                ? $qb->andWhere($expr)
+                : $qb->orWhere($expr);
+        }
     }
 
     /**
@@ -54,11 +54,15 @@ class Filter
      */
     public function applyFilter(/*DatagridFilter*/ $filterGroup)
     {
+        if (!($filters = $filterGroup->getFilters())) {
+            return false;
+        }
+
         $qb   = $this->getQueryBuilder();
         $expr = $qb->expr();
 
         $wheres = [];
-        foreach ($filterGroup->getFilters() as $filter) {
+        foreach ($filters as $filter) {
             $column = $filter->getColumn();
             if (!$column instanceof Column\Select) {
                 throw new \Exception('This column cannot be filtered: ' . $column->getUniqueId());
