@@ -7,6 +7,7 @@ use Laminas\Db\Sql\Sql;
 use Laminas\Db\Sql\Where;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Filter as DatagridFilter;
+use ZfcDatagrid\FilterGroup;
 use function sprintf;
 
 class Filter
@@ -48,111 +49,145 @@ class Filter
         return $this->select;
     }
 
+    public function applyFilters($filterGroup)
+    {
+        if (!$filterGroup) {
+            return;
+        }
+
+        $this->applyFilter($filterGroup);
+
+        /*$qb = $this->getQueryBuilder();
+        if ($expr = $this->applyFilter($filterGroup)) {
+            FilterGroup::COND_AND === $filterGroup->getCondition()
+                ? $qb->andWhere($expr)
+                : $qb->orWhere($expr);
+        }*/
+    }
+    
     /**
-     * @param DatagridFilter $filter
+     * @param FilterGroup $filterGroup
      *
      * @return $this
      * @throws \Exception
      */
-    public function applyFilter(DatagridFilter $filter): self
+    public function applyFilter(/*DatagridFilter*/ $filterGroup)
     {
+        if (!($filters = $filterGroup->getFilters())) {
+            return false;
+        }
+
         $select = $this->getSelect();
 
         $adapter = $this->getSql()->getAdapter();
-        $qi      = function ($name) use ($adapter) {
+        $qi = function ($name) use ($adapter) {
             return $adapter->getPlatform()->quoteIdentifier($name);
         };
 
-        $col = $filter->getColumn();
-        if (! $col instanceof Column\Select) {
-            throw new \Exception('This column cannot be filtered: ' . $col->getUniqueId());
-        }
-
-        $colString = $col->getSelectPart1();
-        if ($col->getSelectPart2() != '') {
-            $colString .= '.' . $col->getSelectPart2();
-        }
-        if ($col instanceof Column\Select && $col->hasFilterSelectExpression()) {
-            $colString = sprintf($col->getFilterSelectExpression(), $colString);
-        }
-        $values = $filter->getValues();
-
         $wheres = [];
-        foreach ($values as $value) {
-            $where = new Where();
+        foreach ($filters as $filter) {
+            $column = $filter->getColumn();
+            if (!$column instanceof Column\Select) {
+                throw new \Exception('This column cannot be filtered: ' . $column->getUniqueId());
+            }
 
-            switch ($filter->getOperator()) {
-                case DatagridFilter::LIKE:
-                    $wheres[] = $where->like($colString, '%' . $value . '%');
-                    break;
+            $colString = $column->getSelectPart1();
+            if ($column->getSelectPart2() != '') {
+                $colString .= '.' . $column->getSelectPart2();
+            }
 
-                case DatagridFilter::LIKE_LEFT:
-                    $wheres[] = $where->like($colString, '%' . $value);
-                    break;
+            if ($column instanceof Column\Select && $column->hasFilterSelectExpression()) {
+                $colString = sprintf($column->getFilterSelectExpression(), $colString);
+            }
 
-                case DatagridFilter::LIKE_RIGHT:
-                    $wheres[] = $where->like($colString, $value . '%');
-                    break;
-
-                case DatagridFilter::NOT_LIKE:
-                    $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
-                        '%' . $value . '%',
-                    ]);
-                    break;
-
-                case DatagridFilter::NOT_LIKE_LEFT:
-                    $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
-                        '%' . $value,
-                    ]);
-                    break;
-
-                case DatagridFilter::NOT_LIKE_RIGHT:
-                    $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
-                        $value . '%',
-                    ]);
-                    break;
-
-                case DatagridFilter::EQUAL:
-                    $wheres[] = $where->equalTo($colString, $value);
-                    break;
-
-                case DatagridFilter::NOT_EQUAL:
-                    $wheres[] = $where->notEqualTo($colString, $value);
-                    break;
-
-                case DatagridFilter::GREATER_EQUAL:
-                    $wheres[] = $where->greaterThanOrEqualTo($colString, $value);
-                    break;
-
-                case DatagridFilter::GREATER:
-                    $wheres[] = $where->greaterThan($colString, $value);
-                    break;
-
-                case DatagridFilter::LESS_EQUAL:
-                    $wheres[] = $where->lessThanOrEqualTo($colString, $value);
-                    break;
-
-                case DatagridFilter::LESS:
-                    $wheres[] = $where->lessThan($colString, $value);
-                    break;
-
-                case DatagridFilter::BETWEEN:
-                    $wheres[] = $where->between($colString, $values[0], $values[1]);
-                    break 2;
-
-                default:
-                    throw new \InvalidArgumentException(
-                        'This operator is currently not supported: ' . $filter->getOperator()
-                    );
-                    break;
+            $values = $filter->getValues();
+            foreach ($values as $value) {
+                $where = new Where();
+                switch ($filter->getOperator()) {
+                    case DatagridFilter::LIKE:
+                        $wheres[] = $where->like($colString, '%' . $value . '%');
+                        break;
+                    case DatagridFilter::LIKE_LEFT:
+                        $wheres[] = $where->like($colString, '%' . $value);
+                        break;
+                    case DatagridFilter::LIKE_RIGHT:
+                        $wheres[] = $where->like($colString, $value . '%');
+                        break;
+                    case DatagridFilter::NOT_LIKE:
+                        $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
+                            '%' . $value . '%',
+                        ]);
+                        break;
+                    case DatagridFilter::NOT_LIKE_LEFT:
+                        $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
+                            '%' . $value,
+                        ]);
+                        break;
+                    case DatagridFilter::NOT_LIKE_RIGHT:
+                        $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
+                            $value . '%',
+                        ]);
+                        break;
+                    case DatagridFilter::EQUAL:
+                        $wheres[] = $where->equalTo($colString, $value);
+                        break;
+                    case DatagridFilter::NOT_EQUAL:
+                        $wheres[] = $where->notEqualTo($colString, $value);
+                        break;
+                    case DatagridFilter::GREATER_EQUAL:
+                        $wheres[] = $where->greaterThanOrEqualTo($colString, $value);
+                        break;
+                    case DatagridFilter::GREATER:
+                        $wheres[] = $where->greaterThan($colString, $value);
+                        break;
+                    case DatagridFilter::LESS_EQUAL:
+                        $wheres[] = $where->lessThanOrEqualTo($colString, $value);
+                        break;
+                    case DatagridFilter::LESS:
+                        $wheres[] = $where->lessThan($colString, $value);
+                        break;
+                    case DatagridFilter::IN:
+                        $wheres[] = $where->in($colString, $values);
+                        break 2;
+                    case DatagridFilter::BETWEEN:
+                        $wheres[] = $where->between($colString, $values[0], $values[1]);
+                        break 2;
+                    case DatagridFilter::NOT_NULL:
+                        $wheres[] = $where->isNotNull($colString);
+                        break;
+                    case DatagridFilter::NULL:
+                        $wheres[] = $where->isNull($colString);
+                        break;
+                    default:
+                        throw new \InvalidArgumentException(
+                            'This operator is currently not supported: ' . $filter->getOperator()
+                        );
+                        break;
+                }
             }
         }
 
-        if (! empty($wheres)) {
-            $set = new PredicateSet($wheres, PredicateSet::OP_OR);
+        if (!empty($wheres)) {
+            //$set = new PredicateSet($wheres, PredicateSet::OP_OR);
+            //$select->where->andPredicate($set);
+
+
+            if ($groups = $filterGroup->getGroups()) {
+                foreach ($groups as $group) {
+                    //$exp->add($this->applyFilter($group));
+                    $wheres[] = $this->applyFilter($group);
+                }
+            }
+
+            $set = FilterGroup::COND_AND === $filterGroup->getCondition()
+                ? new PredicateSet($wheres, PredicateSet::OP_AND)
+                : new PredicateSet($wheres, PredicateSet::OP_OR);
+
             $select->where->andPredicate($set);
+
+            //$set->addMultiple($wheres);
         }
 
-        return $this;
+        return $select;
     }
 }
