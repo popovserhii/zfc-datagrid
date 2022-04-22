@@ -6,6 +6,9 @@ use function is_object;
 
 class Select extends AbstractColumn
 {
+    const SELECT_СLAUSE_WHERE = 'where';
+    const SELECT_СLAUSE_HAVING = 'having';
+
     /** @var string|object|null */
     protected $selectPart1 = '';
 
@@ -19,6 +22,13 @@ class Select extends AbstractColumn
      * @var string|null
      */
     private $filterSelectExpression;
+
+    /**
+     * A WHERE or HAVING clause
+     * 
+     * @var string
+     */
+    private $filterSelectСlause = self::SELECT_СLAUSE_WHERE;
 
     /**
      * Possible calls:
@@ -113,5 +123,25 @@ class Select extends AbstractColumn
     public function hasFilterSelectExpression(): bool
     {
         return null !== $this->filterSelectExpression;
+    }
+
+    /**
+     * @param string $filterSelectСlause
+     *
+     * @return Select
+     */
+    public function setFilterSelectСlause(string $filterSelectСlause): Select
+    {
+        $this->filterSelectСlause = $filterSelectСlause;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFilterSelectСlause(): string
+    {
+        return $this->filterSelectСlause;
     }
 }

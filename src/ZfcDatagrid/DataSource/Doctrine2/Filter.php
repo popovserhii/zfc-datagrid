@@ -61,7 +61,7 @@ class Filter
         $qb   = $this->getQueryBuilder();
         $expr = $qb->expr();
 
-        $wheres = [];
+        $clauses = [];
         foreach ($filters as $filter) {
             $column = $filter->getColumn();
             if (!$column instanceof Column\Select) {
@@ -80,84 +80,84 @@ class Filter
                 $valueParameterName = ':' . str_replace('.', '', $column->getUniqueId() . $key);
                 switch ($filter->getOperator()) {
                     case DatagridFilter::LIKE:
-                        $wheres[] = $expr->like($colString, $valueParameterName);
+                        $clauses[] = $expr->like($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, '%' . $value . '%');
 
                         break;
                     case DatagridFilter::LIKE_LEFT:
-                        $wheres[] = $expr->like($colString, $valueParameterName);
+                        $clauses[] = $expr->like($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, '%' . $value);
 
                         break;
                     case DatagridFilter::LIKE_RIGHT:
-                        $wheres[] = $expr->like($colString, $valueParameterName);
+                        $clauses[] = $expr->like($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $value . '%');
 
                         break;
                     case DatagridFilter::NOT_LIKE:
-                        $wheres[] = $expr->notLike($colString, $valueParameterName);
+                        $clauses[] = $expr->notLike($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, '%' . $value . '%');
 
                         break;
                     case DatagridFilter::NOT_LIKE_LEFT:
-                        $wheres[] = $expr->notLike($colString, $valueParameterName);
+                        $clauses[] = $expr->notLike($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, '%' . $value);
 
                         break;
                     case DatagridFilter::NOT_LIKE_RIGHT:
-                        $wheres[] = $expr->notLike($colString, $valueParameterName);
+                        $clauses[] = $expr->notLike($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $value . '%');
 
                         break;
                     case DatagridFilter::EQUAL:
-                        $wheres[] = $expr->eq($colString, $valueParameterName);
+                        $clauses[] = $expr->eq($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $value);
 
                         break;
                     case DatagridFilter::NOT_EQUAL:
-                        $wheres[] = $expr->neq($colString, $valueParameterName);
+                        $clauses[] = $expr->neq($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $value);
 
                         break;
                     case DatagridFilter::GREATER_EQUAL:
-                        $wheres[] = $expr->gte($colString, $valueParameterName);
+                        $clauses[] = $expr->gte($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $value);
 
                         break;
                     case DatagridFilter::GREATER:
-                        $wheres[] = $expr->gt($colString, $valueParameterName);
+                        $clauses[] = $expr->gt($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $value);
 
                         break;
                     case DatagridFilter::LESS_EQUAL:
-                        $wheres[] = $expr->lte($colString, $valueParameterName);
+                        $clauses[] = $expr->lte($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $value);
 
                         break;
                     case DatagridFilter::LESS:
-                        $wheres[] = $expr->lt($colString, $valueParameterName);
+                        $clauses[] = $expr->lt($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $value);
 
                         break;
                     case DatagridFilter::IN:
-                        $wheres[] = $expr->in($colString, $valueParameterName);
+                        $clauses[] = $expr->in($colString, $valueParameterName);
                         $qb->setParameter($valueParameterName, $values);
 
                         break 2;
                     case DatagridFilter::BETWEEN:
                         $minParameterName = ':' . str_replace('.', '', $colString . '0');
                         $maxParameterName = ':' . str_replace('.', '', $colString . '1');
-                        $wheres[] = $expr->between($colString, $minParameterName, $maxParameterName);
+                        $clauses[] = $expr->between($colString, $minParameterName, $maxParameterName);
                         $qb->setParameter($minParameterName, $values[0]);
                         $qb->setParameter($maxParameterName, $values[1]);
 
                         break 2;
                     case DatagridFilter::NOT_NULL:
-                        $wheres[] = $expr->isNotNull($colString);
+                        $clauses[] = $expr->isNotNull($colString);
 
                         break;
                     case DatagridFilter::NULL:
-                        $wheres[] = $expr->isNull($colString);
+                        $clauses[] = $expr->isNull($colString);
 
                         break;
                     default:
@@ -168,11 +168,11 @@ class Filter
             }
         }
 
-        if (! empty($wheres)) {
+        if (! empty($clauses)) {
             if ($groups = $filterGroup->getGroups()) {
                 foreach ($groups as $group) {
                     //$exp->add($this->applyFilter($group));
-                    $wheres[] = $this->applyFilter($group);
+                    $clauses[] = $this->applyFilter($group);
                 }
             }
 
@@ -180,7 +180,7 @@ class Filter
                 ? $expr->andX()
                 : $expr->orX();
 
-            $expr->addMultiple($wheres);
+            $expr->addMultiple($clauses);
         }
 
         return $expr;

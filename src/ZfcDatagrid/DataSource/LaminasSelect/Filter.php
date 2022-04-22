@@ -1,10 +1,12 @@
 <?php
 namespace ZfcDatagrid\DataSource\LaminasSelect;
 
+use Laminas\Db\Sql\Predicate\Predicate;
 use Laminas\Db\Sql\Predicate\PredicateSet;
 use Laminas\Db\Sql\Select;
 use Laminas\Db\Sql\Sql;
 use Laminas\Db\Sql\Where;
+use Laminas\Db\Sql\Having;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Filter as DatagridFilter;
 use ZfcDatagrid\FilterGroup;
@@ -21,6 +23,16 @@ class Filter
      * @var Select
      */
     private $select;
+
+    /**
+     * Mappting of select clauses to real classes.
+     *
+     * @var string[]
+     */
+    private $clauses = [
+        Column\Select::SELECT_СLAUSE_WHERE => Where::class,
+        Column\Select::SELECT_СLAUSE_HAVING => Having::class,
+    ];
 
     /**
      * Filter constructor.
@@ -56,13 +68,6 @@ class Filter
         }
 
         $this->applyFilter($filterGroup);
-
-        /*$qb = $this->getQueryBuilder();
-        if ($expr = $this->applyFilter($filterGroup)) {
-            FilterGroup::COND_AND === $filterGroup->getCondition()
-                ? $qb->andWhere($expr)
-                : $qb->orWhere($expr);
-        }*/
     }
     
     /**
@@ -84,7 +89,7 @@ class Filter
             return $adapter->getPlatform()->quoteIdentifier($name);
         };
 
-        $wheres = [];
+        $clauses = [];
         foreach ($filters as $filter) {
             $column = $filter->getColumn();
             if (!$column instanceof Column\Select) {
@@ -102,61 +107,64 @@ class Filter
 
             $values = $filter->getValues();
             foreach ($values as $value) {
-                $where = new Where();
+                $clauseType = $column->getFilterSelectСlause();
+                $clauseClass = $this->clauses[$column->getFilterSelectСlause()];
+                /** @var Predicate $clause */
+                $clause = new $clauseClass();
                 switch ($filter->getOperator()) {
                     case DatagridFilter::LIKE:
-                        $wheres[] = $where->like($colString, '%' . $value . '%');
+                        $clauses[$clauseType][] = $clause->like($colString, '%' . $value . '%');
                         break;
                     case DatagridFilter::LIKE_LEFT:
-                        $wheres[] = $where->like($colString, '%' . $value);
+                        $clauses[$clauseType][] = $clause->like($colString, '%' . $value);
                         break;
                     case DatagridFilter::LIKE_RIGHT:
-                        $wheres[] = $where->like($colString, $value . '%');
+                        $clauses[$clauseType][] = $clause->like($colString, $value . '%');
                         break;
                     case DatagridFilter::NOT_LIKE:
-                        $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
+                        $clauses[$clauseType][] = $clause->literal($qi($colString) . 'NOT LIKE ?', [
                             '%' . $value . '%',
                         ]);
                         break;
                     case DatagridFilter::NOT_LIKE_LEFT:
-                        $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
+                        $clauses[$clauseType][] = $clause->literal($qi($colString) . 'NOT LIKE ?', [
                             '%' . $value,
                         ]);
                         break;
                     case DatagridFilter::NOT_LIKE_RIGHT:
-                        $wheres[] = $where->literal($qi($colString) . 'NOT LIKE ?', [
+                        $clauses[$clauseType][] = $clause->literal($qi($colString) . 'NOT LIKE ?', [
                             $value . '%',
                         ]);
                         break;
                     case DatagridFilter::EQUAL:
-                        $wheres[] = $where->equalTo($colString, $value);
+                        $clauses[$clauseType][] = $clause->equalTo($colString, $value);
                         break;
                     case DatagridFilter::NOT_EQUAL:
-                        $wheres[] = $where->notEqualTo($colString, $value);
+                        $clauses[$clauseType][] = $clause->notEqualTo($colString, $value);
                         break;
                     case DatagridFilter::GREATER_EQUAL:
-                        $wheres[] = $where->greaterThanOrEqualTo($colString, $value);
+                        $clauses[$clauseType][] = $clause->greaterThanOrEqualTo($colString, $value);
                         break;
                     case DatagridFilter::GREATER:
-                        $wheres[] = $where->greaterThan($colString, $value);
+                        $clauses[$clauseType][] = $clause->greaterThan($colString, $value);
                         break;
                     case DatagridFilter::LESS_EQUAL:
-                        $wheres[] = $where->lessThanOrEqualTo($colString, $value);
+                        $clauses[$clauseType][] = $clause->lessThanOrEqualTo($colString, $value);
                         break;
                     case DatagridFilter::LESS:
-                        $wheres[] = $where->lessThan($colString, $value);
+                        $clauses[$clauseType][] = $clause->lessThan($colString, $value);
                         break;
                     case DatagridFilter::IN:
-                        $wheres[] = $where->in($colString, $values);
+                        $clauses[$clauseType][] = $clause->in($colString, $values);
                         break 2;
                     case DatagridFilter::BETWEEN:
-                        $wheres[] = $where->between($colString, $values[0], $values[1]);
+                        $clauses[$clauseType][] = $clause->between($colString, $values[0], $values[1]);
                         break 2;
                     case DatagridFilter::NOT_NULL:
-                        $wheres[] = $where->isNotNull($colString);
+                        $clauses[$clauseType][] = $clause->isNotNull($colString);
                         break;
                     case DatagridFilter::NULL:
-                        $wheres[] = $where->isNull($colString);
+                        $clauses[$clauseType][] = $clause->isNull($colString);
                         break;
                     default:
                         throw new \InvalidArgumentException(
@@ -167,25 +175,29 @@ class Filter
             }
         }
 
-        if (!empty($wheres)) {
+        if (!empty($clauses)) {
             //$set = new PredicateSet($wheres, PredicateSet::OP_OR);
             //$select->where->andPredicate($set);
 
 
             if ($groups = $filterGroup->getGroups()) {
                 foreach ($groups as $group) {
-                    //$exp->add($this->applyFilter($group));
-                    $wheres[] = $this->applyFilter($group);
+                    $subClauses = $this->applyFilter($group);
+                    if (isset($subClauses[Column\Select::SELECT_СLAUSE_WHERE])) {
+                        $clauses[Column\Select::SELECT_СLAUSE_WHERE][] = $subClauses[Column\Select::SELECT_СLAUSE_WHERE];
+                    }
+                    if (isset($subClauses[Column\Select::SELECT_СLAUSE_HAVING])) {
+                        $clauses[Column\Select::SELECT_СLAUSE_HAVING][] = $subClauses[Column\Select::SELECT_СLAUSE_HAVING];
+                    }
                 }
             }
 
-            $set = FilterGroup::COND_AND === $filterGroup->getCondition()
-                ? new PredicateSet($wheres, PredicateSet::OP_AND)
-                : new PredicateSet($wheres, PredicateSet::OP_OR);
-
-            $select->where->andPredicate($set);
-
-            //$set->addMultiple($wheres);
+            foreach ($clauses as $type => $subClauses) {
+                $set = FilterGroup::COND_AND === $filterGroup->getCondition()
+                    ? new PredicateSet($subClauses, PredicateSet::OP_AND)
+                    : new PredicateSet($subClauses, PredicateSet::OP_OR);
+                $select->{$type}->andPredicate($set);
+            }
         }
 
         return $select;
