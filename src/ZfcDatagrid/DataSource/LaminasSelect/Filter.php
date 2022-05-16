@@ -92,6 +92,11 @@ class Filter
         $clauses = [];
         foreach ($filters as $filter) {
             $column = $filter->getColumn();
+            $clauseType = $column->getFilterSelectСlause();
+            $clauseClass = $this->clauses[$clauseType];
+            /** @var Predicate $clause */
+            $clause = new $clauseClass();
+            
             if (!$column instanceof Column\Select) {
                 throw new \Exception('This column cannot be filtered: ' . $column->getUniqueId());
             }
@@ -107,10 +112,6 @@ class Filter
 
             $values = $filter->getValues();
             foreach ($values as $value) {
-                $clauseType = $column->getFilterSelectСlause();
-                $clauseClass = $this->clauses[$column->getFilterSelectСlause()];
-                /** @var Predicate $clause */
-                $clause = new $clauseClass();
                 switch ($filter->getOperator()) {
                     case DatagridFilter::LIKE:
                         $clauses[$clauseType][] = $clause->like($colString, '%' . $value . '%');
