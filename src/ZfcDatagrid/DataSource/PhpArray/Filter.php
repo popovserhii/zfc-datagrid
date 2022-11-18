@@ -13,9 +13,33 @@ class Filter
     /**
      * @param DatagridFilter $filter
      */
-    public function __construct(DatagridFilter $filter)
+    //public function __construct(DatagridFilter $filter)
+    public function __construct(&$data)
     {
-        $this->filter = $filter;
+        //$this->filter = $filter;
+        $this->data = $data;
+    }
+
+    public function applyFilters($filterGroup)
+    {
+        if (!($filters = $filterGroup->getFilters())) {
+            return false;
+        }
+
+        //$this->applyFilter($filterGroup);
+
+
+        foreach ($filters as $filter) {
+            /* @var $filter \ZfcDatagrid\Filter */
+            if ($filter->isColumnFilter() === true) {
+                $this->filter = $filter;
+                $this->data = array_filter($this->data, [
+                    //new PhpArray\Filter($filter),
+                    $this,
+                    'applyFilter',
+                ]);
+            }
+        }
     }
 
     /**

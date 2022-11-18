@@ -4,6 +4,7 @@ namespace ZfcDatagrid\DataSource;
 use Laminas\Paginator\Adapter\AdapterInterface as PaginatorAdapterInterface;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Filter;
+use ZfcDatagrid\FilterGroup;
 
 abstract class AbstractDataSource implements DataSourceInterface
 {
@@ -13,8 +14,8 @@ abstract class AbstractDataSource implements DataSourceInterface
     /** @var array */
     protected $sortConditions = [];
 
-    /** @var Filter[] */
-    protected $filters = [];
+    /** @var FilterGroup */
+    protected $filterGroup = [];
 
     /**
      * The data result.
@@ -86,36 +87,23 @@ abstract class AbstractDataSource implements DataSourceInterface
     /**
      * Add a filter rule.
      *
-     * @param Filter $filter
+     * @param FilterGroup $filterGroup
      *
      * @return $this
      */
-    public function addFilter(/*Filter*/ $filter): DataSourceInterface
+    public function setFilterGroup(FilterGroup $filterGroup): DataSourceInterface
     {
-        //$this->filters[] = $filter;
-        $this->filters = $filter;
+        $this->filterGroup = $filterGroup;
 
         return $this;
     }
 
     /**
-     * @param Filter[] $filters
-     *
-     * @return $this
-     */
-    public function setFilters(array $filters): self
-    {
-        $this->filters = $filters;
-
-        return $this;
-    }
-
-    /**
-     * @return Filter[]
+     * @return FilterGroup
      */
     public function getFilterGroup()//: array
     {
-        return $this->filters;
+        return $this->filterGroup;
     }
 
     /**

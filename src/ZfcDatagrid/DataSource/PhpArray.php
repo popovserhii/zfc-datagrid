@@ -54,15 +54,24 @@ class PhpArray extends AbstractDataSource
         /*
          * Step 2) Apply filters
          */
-        foreach ($this->getFilterGroup() as $filter) {
-            /* @var $filter \ZfcDatagrid\Filter */
+        /*foreach ($this->getFilterGroup() as $filter) {
             if ($filter->isColumnFilter() === true) {
                 $data = array_filter($data, [
                     new PhpArray\Filter($filter),
                     'applyFilter',
                 ]);
             }
-        }
+        }*/
+
+        $filterColumn = new PhpArray\Filter($data);
+        /*foreach ($this->getFilters() as $filter) {
+            if ($filter->isColumnFilter() === true) {
+                $filterColumn->applyFilter($filter);
+            }
+        }*/
+        //$filterColumn->applyFilter($this->getFilters());
+        $filterColumn->applyFilters($this->getFilterGroup());
+
 
         /**
          * Step 3) Remove unneeded columns.

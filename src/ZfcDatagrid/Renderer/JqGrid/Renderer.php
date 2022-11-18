@@ -203,7 +203,7 @@ class Renderer extends AbstractRenderer
         return $filter;
     }
 
-    public function prepareFilter($rawFilters)
+    public function prepareFilters($rawFilters)
     {
         if (!$rawFilters) {
             return null;

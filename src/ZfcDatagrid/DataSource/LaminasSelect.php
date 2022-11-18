@@ -47,6 +47,8 @@ class LaminasSelect extends AbstractDataSource
         } else {
             throw new \InvalidArgumentException('Object of "Laminas\Db\Sql\Sql" or "Laminas\Db\Adapter\Adapter" needed.');
         }
+
+        return $this;
     }
 
     /**

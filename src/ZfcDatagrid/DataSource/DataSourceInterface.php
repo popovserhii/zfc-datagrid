@@ -4,6 +4,7 @@ namespace ZfcDatagrid\DataSource;
 use Laminas\Paginator\Adapter\AdapterInterface;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Filter;
+use ZfcDatagrid\FilterGroup;
 
 interface DataSourceInterface
 {
@@ -45,7 +46,7 @@ interface DataSourceInterface
      *
      * @return $this
      */
-    public function addFilter(/*Filter*/ $filter): self;
+    public function setFilterGroup(FilterGroup $filterGroup): self;
 
     /**
      * @return AdapterInterface
