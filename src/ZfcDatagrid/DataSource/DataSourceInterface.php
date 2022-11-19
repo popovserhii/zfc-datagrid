@@ -32,7 +32,7 @@ interface DataSourceInterface
     public function setColumns(array $columns): self;
 
     /**
-     * Set sort conditions.
+     * Add sort condition.
      *
      * @param Column\AbstractColumn $column
      * @param string                $sortDirection
@@ -42,7 +42,7 @@ interface DataSourceInterface
     public function addSortCondition(Column\AbstractColumn $column, string $sortDirection = 'ASC'): self;
 
     /**
-     * @param Filter $filters
+     * @param FilterGroup $filterGroup
      *
      * @return $this
      */

@@ -3,6 +3,7 @@ namespace ZfcDatagrid\Renderer;
 
 use InvalidArgumentException;
 use Laminas\Cache;
+use Psr\Http\Message\RequestInterface;
 use ZfcDatagrid\Column\AbstractColumn;
 use ZfcDatagrid\Translator\TranslatorInterface;
 use Laminas\Mvc\MvcEvent;
@@ -43,6 +44,9 @@ abstract class AbstractRenderer implements RendererInterface
     /** @var Filter[] */
     protected $filters = [];
 
+    /** @var string[]  */
+    protected $filtersIgnored = [];
+
     /** @var int|null */
     protected $currentPageNumber = null;
 
@@ -67,7 +71,7 @@ abstract class AbstractRenderer implements RendererInterface
     /** @var TranslatorInterface|null */
     protected $translator;
 
-    /** var RequestInterface */
+    /** @var RequestInterface */
     protected $request;
 
     /**
@@ -404,11 +408,7 @@ abstract class AbstractRenderer implements RendererInterface
     }
 
     /**
-<<<<<<< HEAD
      * @return RequestInterface
-=======
-     * @return \Laminas\Stdlib\RequestInterface
->>>>>>> upstream/develop
      */
     public function getRequest()
     {
@@ -650,6 +650,41 @@ abstract class AbstractRenderer implements RendererInterface
         }
 
         return $filters;
+    }
+
+    public function setIgnoredFilters($ignoredfilters)
+    {
+        foreach ($ignoredfilters as $ignored) {
+            // Under the hood we use underscore for fields separation, all others separators must be replaced.
+            $uniqueId = str_replace(['.', ':'], '_', $ignored);
+            $this->filtersIgnored[$uniqueId] = $uniqueId;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param Filter $filter
+     *
+     * @return bool
+     */
+    public function isFilterIgnored(Filter $filter)
+    {
+        $uniqueId = $filter->getColumn()->getUniqueId();
+        if (isset($this->filtersIgnored[$uniqueId])) {
+            return true;
+        }
+
+        foreach ($this->filtersIgnored as $ignored) {
+            // The first if checks if $ignored is the placeholder with the asterisk at the end (aka. work.*).
+            // The second if makes a revers checking if $filter starts with $ignored without the asteriks.
+            // @see https://stackoverflow.com/a/10473026/1335142
+            if (substr_compare($ignored, '*', -strlen('*')) === 0) {
+                if (substr_compare($uniqueId, rtrim($ignored, '*'), 0, strlen(rtrim($ignored, '*'))) === 0) {
+                    return true;
+                }
+            }
+        }
     }
 
     /**

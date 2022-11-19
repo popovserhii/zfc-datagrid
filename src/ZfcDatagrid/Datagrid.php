@@ -980,9 +980,7 @@ class Datagrid
             /*
              * Step 1.2) Sorting
              */
-            foreach ($renderer->getSortConditions() as $condition) {
-                $this->getDataSource()->addSortCondition($condition['column'], $condition['sortDirection']);
-            }
+            $this->getDataSource()->setSortConditions($renderer->getSortConditions());
 
             /*
              * Step 1.3) Filtering
@@ -990,7 +988,7 @@ class Datagrid
             /*foreach ($renderer->getFilters() as $filter) {
                 $this->getDataSource()->addFilter($filter);
             }*/
-            $this->getDataSource()->addFilter($renderer->getFilters());
+            $this->getDataSource()->setFilterGroup($renderer->getFilters());
         }
 
         /*

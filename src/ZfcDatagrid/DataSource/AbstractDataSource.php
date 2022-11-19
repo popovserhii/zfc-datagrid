@@ -47,7 +47,7 @@ abstract class AbstractDataSource implements DataSourceInterface
     }
 
     /**
-     * Set sort conditions.
+     * Add sort condition.
      *
      * @param Column\AbstractColumn $column
      * @param string                $sortDirection
