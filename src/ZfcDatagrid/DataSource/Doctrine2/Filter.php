@@ -62,7 +62,7 @@ class Filter
         $expr = $qb->expr();
 
         $clauses = [];
-        foreach ($filters as $filter) {
+        foreach ($filters as $i => $filter) {
             $column = $filter->getColumn();
             if (!$column instanceof Column\Select) {
                 throw new \Exception('This column cannot be filtered: ' . $column->getUniqueId());
@@ -77,7 +77,7 @@ class Filter
 
             $values = $filter->getValues();
             foreach ($values as $key => $value) {
-                $valueParameterName = ':' . str_replace('.', '', $column->getUniqueId() . $key);
+                $valueParameterName = ':' . str_replace('.', '', $column->getUniqueId() . $i . $key);
                 switch ($filter->getOperator()) {
                     case DatagridFilter::LIKE:
                         $clauses[] = $expr->like($colString, $valueParameterName);

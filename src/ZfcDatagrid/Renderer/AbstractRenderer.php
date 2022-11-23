@@ -670,6 +670,10 @@ abstract class AbstractRenderer implements RendererInterface
      */
     public function isFilterIgnored(Filter $filter)
     {
+        if (!$this->filtersIgnored) {
+            return false;
+        }
+
         $uniqueId = $filter->getColumn()->getUniqueId();
         if (isset($this->filtersIgnored[$uniqueId])) {
             return true;
