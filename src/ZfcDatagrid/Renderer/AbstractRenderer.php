@@ -5,6 +5,7 @@ use InvalidArgumentException;
 use Laminas\Cache;
 use Psr\Http\Message\RequestInterface;
 use ZfcDatagrid\Column\AbstractColumn;
+use ZfcDatagrid\FilterGroup;
 use ZfcDatagrid\Translator\TranslatorInterface;
 use Laminas\Mvc\MvcEvent;
 use Laminas\Paginator\Paginator;
@@ -634,22 +635,21 @@ abstract class AbstractRenderer implements RendererInterface
      *
      * @return Filter[]
      */
-    public function getFiltersDefault(): array
+    public function getFiltersDefault(): FilterGroup
     {
-        $filters = [];
-
+        $filterGroup = new FilterGroup();
         foreach ($this->getColumns() as $column) {
             /* @var $column \ZfcDatagrid\Column\AbstractColumn */
             if ($column->hasFilterDefaultValue() === true) {
                 $filter = new Filter();
                 $filter->setFromColumn($column, $column->getFilterDefaultValue());
-                $filters[] = $filter;
+                $filterGroup->addFilter($filter);
 
                 $column->setFilterActive($filter->getDisplayColumnValue());
             }
         }
 
-        return $filters;
+        return $filterGroup;
     }
 
     public function setIgnoredFilters($ignoredfilters)

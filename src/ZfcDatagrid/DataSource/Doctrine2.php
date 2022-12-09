@@ -13,6 +13,11 @@ class Doctrine2 extends AbstractDataSource
     private $qb;
 
     /**
+     * @var Doctrine2\Filter
+     */
+    private $filterColumn;
+
+    /**
      * Data source.
      *
      * @param ORM\QueryBuilder $data
@@ -28,6 +33,15 @@ class Doctrine2 extends AbstractDataSource
     public function getData(): ORM\QueryBuilder
     {
         return $this->qb;
+    }
+
+    public function getFilterColumn()
+    {
+        if (!$this->filterColumn) {
+            $this->filterColumn = new Doctrine2\Filter($this->qb);
+        }
+
+        return $this->filterColumn;
     }
 
     /**
@@ -90,7 +104,7 @@ class Doctrine2 extends AbstractDataSource
         /*
          * Step 3) Apply filters
          */
-        $filterColumn = new Doctrine2\Filter($qb);
+        $filterColumn = $this->getFilterColumn();
         /*foreach ($this->getFilters() as $filter) {
             if ($filter->isColumnFilter() === true) {
                 $filterColumn->applyFilter($filter);

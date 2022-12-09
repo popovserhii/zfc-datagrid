@@ -16,6 +16,11 @@ class LaminasSelect extends AbstractDataSource
     private $sqlObject;
 
     /**
+     * @var LaminasSelect\Filter
+     */
+    private $filterColumn;
+
+    /**
      * Data source.
      *
      * @param Sql\Select $data
@@ -31,6 +36,18 @@ class LaminasSelect extends AbstractDataSource
     public function getData(): Sql\Select
     {
         return $this->select;
+    }
+
+    /**
+     * @return LaminasSelect\Filter
+     */
+    public function getFilterColumn()
+    {
+        if (!$this->filterColumn) {
+            $this->filterColumn = new LaminasSelect\Filter($this->getAdapter(), $this->select);
+        }
+
+        return $this->filterColumn;
     }
 
     /**
@@ -122,7 +139,7 @@ class LaminasSelect extends AbstractDataSource
         /*
          * Step 3) Apply filters
          */
-        $filterColumn = new LaminasSelect\Filter($this->getAdapter(), $select);
+        $filterColumn = $this->getFilterColumn();
 //        foreach ($this->getFilterGroup() as $filter) {
 //            if ($filter->isColumnFilter() === true) {
 //                $filterColumn->applyFilter($filter);

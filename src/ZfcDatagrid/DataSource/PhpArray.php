@@ -3,6 +3,7 @@ namespace ZfcDatagrid\DataSource;
 
 use Laminas\Paginator\Adapter\ArrayAdapter as PaginatorAdapter;
 use ZfcDatagrid\Column;
+use ZfcDatagrid\DataSource\PhpArray\Filter;
 use function array_filter;
 use function in_array;
 use function get_class;
@@ -12,7 +13,15 @@ use function call_user_func_array;
 
 class PhpArray extends AbstractDataSource
 {
+    /**
+     * @var array
+     */
     private $data = [];
+
+    /**
+     * @var Filter
+     */
+    private $filterColumn;
 
     /**
      * Set the data source.
@@ -33,13 +42,25 @@ class PhpArray extends AbstractDataSource
     }
 
     /**
+     * @return Filter
+     */
+    public function getFilterColumn()
+    {
+        if (!$this->filterColumn) {
+            $this->filterColumn = new PhpArray\Filter($this->data);
+        }
+
+        return $this->filterColumn;
+    }
+
+    /**
      * Execute the query and set the paginator
      * - with sort statements
      * - with filters statements.
      */
     public function execute()
     {
-        $data = $this->getData();
+        //$data = $this->getData();
 
         /*
          * Step 1) Apply sorting
@@ -48,7 +69,7 @@ class PhpArray extends AbstractDataSource
          * @see example number 3
          */
         if (!empty($this->getSortConditions())) {
-            $data = $this->sortArrayMultiple($data, $this->getSortConditions());
+            $this->data = $this->sortArrayMultiple($this->data, $this->getSortConditions());
         }
 
         /*
@@ -63,7 +84,7 @@ class PhpArray extends AbstractDataSource
             }
         }*/
 
-        $filterColumn = new PhpArray\Filter($data);
+        $filterColumn = $this->getFilterColumn();
         /*foreach ($this->getFilters() as $filter) {
             if ($filter->isColumnFilter() === true) {
                 $filterColumn->applyFilter($filter);
@@ -92,7 +113,7 @@ class PhpArray extends AbstractDataSource
             $selectedColumns[] = $colString;
         }
 
-        foreach ($data as &$row) {
+        foreach ($this->data as &$row) {
             foreach ($row as $keyRowCol => $rowCol) {
                 if (! in_array($keyRowCol, $selectedColumns)) {
                     unset($row[$keyRowCol]);
@@ -103,7 +124,7 @@ class PhpArray extends AbstractDataSource
         /*
          * Step 4) Pagination
          */
-        $this->setPaginatorAdapter(new PaginatorAdapter($data));
+        $this->setPaginatorAdapter(new PaginatorAdapter($this->data));
     }
 
     /**
