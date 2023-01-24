@@ -144,6 +144,11 @@ class Filter
                         $qb->setParameter($valueParameterName, $values);
 
                         break 2;
+                    case DatagridFilter::NOT_IN:
+                        $clauses[] = $expr->notIn($colString, $valueParameterName);
+                        $qb->setParameter($valueParameterName, $values);
+
+                        break 2;
                     case DatagridFilter::BETWEEN:
                         $minParameterName = ':' . str_replace('.', '', $colString . '0');
                         $maxParameterName = ':' . str_replace('.', '', $colString . '1');

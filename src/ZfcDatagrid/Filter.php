@@ -67,7 +67,6 @@ class Filter
 
     const NOT_NULL = ':isnotnull';
 
-
     /**
      * List of all available operations
      *

@@ -1,8 +1,11 @@
 <?php
 namespace ZfcDatagrid\DataSource\LaminasSelect;
 
+use Laminas\Db\Sql\Predicate\Operator;
 use Laminas\Db\Sql\Predicate\Predicate;
 use Laminas\Db\Sql\Predicate\PredicateSet;
+//use Laminas\Db\Sql\Predicate\Expression;
+//use Laminas\Db\Sql\Expression;
 use Laminas\Db\Sql\Select;
 use Laminas\Db\Sql\Sql;
 use Laminas\Db\Sql\Where;
@@ -157,6 +160,9 @@ class Filter
                         break;
                     case DatagridFilter::IN:
                         $clauses[$clauseType][] = $clause->in($colString, $values);
+                        break 2;
+                    case DatagridFilter::NOT_IN:
+                        $clauses[$clauseType][] = $clause->notIn($colString, $values);
                         break 2;
                     case DatagridFilter::BETWEEN:
                         $clauses[$clauseType][] = $clause->between($colString, $values[0], $values[1]);
