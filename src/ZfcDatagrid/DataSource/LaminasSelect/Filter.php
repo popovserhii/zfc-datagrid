@@ -189,13 +189,7 @@ class Filter
 
             if ($groups = $filterGroup->getGroups()) {
                 foreach ($groups as $group) {
-                    $subClauses = $this->applyFilter($group);
-                    if (isset($subClauses[Column\Select::SELECT_СLAUSE_WHERE])) {
-                        $clauses[Column\Select::SELECT_СLAUSE_WHERE][] = $subClauses[Column\Select::SELECT_СLAUSE_WHERE];
-                    }
-                    if (isset($subClauses[Column\Select::SELECT_СLAUSE_HAVING])) {
-                        $clauses[Column\Select::SELECT_СLAUSE_HAVING][] = $subClauses[Column\Select::SELECT_СLAUSE_HAVING];
-                    }
+                    $this->applyFilter($group);
                 }
             }
 
