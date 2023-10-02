@@ -287,6 +287,34 @@ class Renderer extends AbstractRenderer
     }
 
     /**
+     * @param int $defaultItems
+     *
+     * @return int
+     *
+     * @throws \Exception
+     */
+    public function getItemsPerPage($defaultItems = 25): int
+    {
+        $request = $this->getRequest();
+
+        $optionsRenderer = $this->getOptionsRenderer();
+        $parameterNames  = $optionsRenderer['parameterNames'];
+
+        $postParams = $request->getParsedBody();
+        $queryParams = $request->getQueryParams();
+
+        $itemsPerPage = $postParams[$parameterNames['itemsPerPage']]
+            ?? $queryParams[$parameterNames['itemsPerPage']]
+            ?? null;
+
+        if ($itemsPerPage != '') {
+            return (int) $itemsPerPage;
+        }
+
+        return (int) $defaultItems;
+    }
+
+    /**
      * @return null|JsonModel|\Laminas\View\Model\ViewModel
      * @throws \Exception
      */
