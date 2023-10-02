@@ -55,7 +55,6 @@ return [
                 'exception_handler' => [
                     'throw_exceptions' => false,
                 ],
-
                 'Serializer',
             ],
         ],
@@ -68,6 +67,7 @@ return [
                     'currentPage'    => 'currentPage',
                     'sortColumns'    => 'sortByColumns',
                     'sortDirections' => 'sortDirections',
+                    'groupColumns'   => 'groupByColumns',
 
                     'massIds' => 'ids',
 
@@ -86,6 +86,7 @@ return [
                     'itemsPerPage'   => 'itemsPerPage',
                     'sortColumns'    => 'sortByColumns',
                     'sortDirections' => 'sortDirections',
+                    'groupColumns'   => 'groupByColumns',
                     'isSearch'       => 'isSearch',
 
                     'massIds' => 'ids',
@@ -101,6 +102,7 @@ return [
                     'itemsPerPage'   => 'items',
                     'sortColumns'    => 'sortBys',
                     'sortDirections' => 'sortDirs',
+                    'groupColumns'   => 'groupBys',
 
                     'filterColumns' => 'filterBys',
                     'filterValues'  => 'filterValues',

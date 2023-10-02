@@ -40,6 +40,9 @@ abstract class AbstractRenderer implements RendererInterface
     protected $rowStyles = [];
 
     /** @var array */
+    protected $groupConditions = [];
+
+    /** @var array */
     protected $sortConditions = [];
 
     /** @var Filter[] */
@@ -516,8 +519,7 @@ abstract class AbstractRenderer implements RendererInterface
     }
 
     /**
-     * Set the sort conditions explicit (e.g.
-     * from a custom form).
+     * Set the sort conditions explicit (e.g. from a custom form).
      *
      * @param array $sortConditions
      *
@@ -589,8 +591,61 @@ abstract class AbstractRenderer implements RendererInterface
     }
 
     /**
-     * Set filters explicit (e.g.
-     * from a custom form).
+     * Set the group conditions explicit (e.g. from a custom form).
+     *
+     * @param array $groupConditions
+     *
+     * @return $this
+     */
+    public function setGroupConditions(array $groupConditions): self
+    {
+        foreach ($groupConditions as $groupCondition) {
+            if (! is_string($groupCondition)) {
+                throw new InvalidArgumentException('Group condition has to be a string');
+            }
+        }
+
+        $this->groupConditions = $groupConditions;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getGroupConditions(): array
+    {
+        if (!empty($this->groupConditions)) {
+            return $this->groupConditions;
+        }
+
+        if ($this->isExport() === true && null !== $this->getCacheGroupConditions()) {
+            // Export renderer should always retrieve the group conditions from cache!
+            $this->groupConditions = $this->getCacheGroupConditions();
+
+            return $this->groupConditions;
+        }
+
+        //$this->groupConditions = $this->getGroupConditionsDefault();
+
+        return $this->groupConditions;
+    }
+
+    /**
+     * @throws \Exception
+     *
+     * @return array|false
+     */
+    private function getCacheGroupConditions(): ?array
+    {
+        $cacheData = $this->getCacheData();
+
+        return $cacheData['groupConditions'] ?? null;
+    }
+
+
+    /**
+     * Set filters explicit (e.g. from a custom form).
      *
      * @param Filter[] $filters
      *

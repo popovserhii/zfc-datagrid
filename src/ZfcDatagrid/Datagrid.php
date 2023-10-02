@@ -967,7 +967,7 @@ class Datagrid
         $renderer = $this->getRenderer();
 
         /*
-         * Step 1) Apply needed columns + filters + sort
+         * Step 1) Apply needed columns + filters + groups + sort
          * - from Request (HTML View) -> and save in cache for export
          * - or from cache (Export PDF / Excel) -> same view like HTML (without LIMIT/Pagination)
          */
@@ -978,16 +978,18 @@ class Datagrid
             $this->getDataSource()->setColumns($this->getColumns());
 
             /*
-             * Step 1.2) Sorting
+             * Step 1.2) Grouping
+             */
+            $this->getDataSource()->setGroupConditions($renderer->getGroupConditions());
+
+            /*
+             * Step 1.3) Sorting
              */
             $this->getDataSource()->setSortConditions($renderer->getSortConditions());
 
             /*
-             * Step 1.3) Filtering
+             * Step 1.4) Filtering
              */
-            /*foreach ($renderer->getFilters() as $filter) {
-                $this->getDataSource()->addFilter($filter);
-            }*/
             $this->getDataSource()->setFilterGroup($renderer->getFilters());
         }
 

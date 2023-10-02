@@ -12,6 +12,9 @@ abstract class AbstractDataSource implements DataSourceInterface
     protected $columns = [];
 
     /** @var array */
+    protected $groupConditions = [];
+
+    /** @var array */
     protected $sortConditions = [];
 
     /** @var FilterGroup */
@@ -82,6 +85,40 @@ abstract class AbstractDataSource implements DataSourceInterface
     public function getSortConditions(): array
     {
         return $this->sortConditions;
+    }
+
+    /**
+     * Add group condition.
+     *
+     * @param Column\AbstractColumn $column
+     *
+     * @return $this
+     */
+    public function addGroupCondition(Column\AbstractColumn $column): DataSourceInterface
+    {
+        $this->groupConditions[] = $column;
+
+        return $this;
+    }
+
+    /**
+     * @param array $groupConditions
+     *
+     * @return $this
+     */
+    public function setGroupConditions(array $groupConditions): self
+    {
+        $this->groupConditions = $groupConditions;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getGroupConditions(): array
+    {
+        return $this->groupConditions;
     }
 
     /**

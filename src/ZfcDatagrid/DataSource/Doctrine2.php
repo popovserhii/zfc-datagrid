@@ -55,16 +55,16 @@ class Doctrine2 extends AbstractDataSource
          * Step 1) Apply needed columns
          */
         $selectColumns = [];
-        foreach ($this->getColumns() as $col) {
-            if (! $col instanceof Column\Select) {
+        foreach ($this->getColumns() as $column) {
+            if (! $column instanceof Column\Select) {
                 continue;
             }
 
-            $colString = $col->getSelectPart1();
-            if ($col->getSelectPart2() != '') {
-                $colString .= '.' . $col->getSelectPart2();
+            $colString = $column->getSelectPart1();
+            if ($column->getSelectPart2() != '') {
+                $colString .= '.' . $column->getSelectPart2();
             }
-            $colString .= ' ' . $col->getUniqueId();
+            $colString .= ' ' . $column->getUniqueId();
 
             $selectColumns[] = $colString;
         }
@@ -72,7 +72,19 @@ class Doctrine2 extends AbstractDataSource
         $qb->select($selectColumns);
 
         /*
-         * Step 2) Apply sorting
+         * Step 2) Apply grouping
+         */
+        if (! empty($this->getGroupConditions())) {
+            // Minimum one group condition given -> so reset the default groupBy
+            $qb->resetDQLPart('groupBy');
+
+            foreach ($this->getGroupConditions() as $key => $groupCondition) {
+                $qb->add('groupBy', new Expr\GroupBy($groupCondition), true);
+            }
+        }
+
+        /*
+         * Step 3) Apply sorting
          */
         if (! empty($this->getSortConditions())) {
             // Minimum one sort condition given -> so reset the default orderBy
@@ -102,7 +114,7 @@ class Doctrine2 extends AbstractDataSource
         }
 
         /*
-         * Step 3) Apply filters
+         * Step 4) Apply filters
          */
         $filterColumn = $this->getFilterColumn();
         /*foreach ($this->getFilters() as $filter) {
@@ -114,7 +126,7 @@ class Doctrine2 extends AbstractDataSource
         $filterColumn->applyFilters($this->getFilterGroup());
 
         /*
-         * Step 4) Pagination
+         * Step 5) Pagination
          */
         $this->setPaginatorAdapter(new PaginatorAdapter($qb));
     }

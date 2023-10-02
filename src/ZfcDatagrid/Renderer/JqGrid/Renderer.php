@@ -71,6 +71,11 @@ class Renderer extends AbstractRenderer
         return $sortColumns;
     }
 
+    public function getGroupColumns()
+    {
+        return $this->getRequestParam('groupColumns');
+    }
+
     public function getSortColumns()
     {
         return $this->getRequestParam('sortColumns');
@@ -134,6 +139,37 @@ class Renderer extends AbstractRenderer
         }
 
         return $this->sortConditions;
+    }
+
+    /**
+     * @see \ZfcDatagrid\Renderer\AbstractRenderer::getGroupConditions()
+     *
+     * @return array
+     *
+     * @throws \Exception
+     */
+    public function getGroupConditions(): array
+    {
+        if (!empty($this->groupConditions)) {
+            return $this->groupConditions;
+        }
+
+        $groupColumns = $this->getGroupColumns();
+
+        if ($groupColumns != '') {
+            $groupColumns = explode(',', $groupColumns);
+
+            foreach ($groupColumns as $groupColumn) {
+                $groupConditions[] = $groupColumn;
+                #$column->setSortActive($sortDirection);
+            }
+        }
+
+        if (! empty($groupConditions)) {
+            $this->groupConditions = $groupConditions;
+        }
+
+        return $this->groupConditions;
     }
 
     /**
