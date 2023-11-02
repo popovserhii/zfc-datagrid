@@ -78,8 +78,19 @@ class Doctrine2 extends AbstractDataSource
             // Minimum one group condition given -> so reset the default groupBy
             $qb->resetDQLPart('groupBy');
 
-            foreach ($this->getGroupConditions() as $key => $groupCondition) {
-                $qb->add('groupBy', new Expr\GroupBy($groupCondition), true);
+            foreach ($this->getGroupConditions() as $key => $col) {
+                if (! $col instanceof Column\Select) {
+                    throw new \Exception('This column cannot be sorted: ' . $col->getUniqueId());
+                }
+
+                /* @var $col \ZfcDatagrid\Column\Select */
+                $colString = $col->getSelectPart1();
+                if ($col->getSelectPart2() != '') {
+                    $colString .= '.' . $col->getSelectPart2();
+                }
+
+                //$qb->add('groupBy', new Expr\GroupBy($col->getUniqueId()), true);
+                $qb->add('groupBy', new Expr\GroupBy($colString), true);
             }
         }
 

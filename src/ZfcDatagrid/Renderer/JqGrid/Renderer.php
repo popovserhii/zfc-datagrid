@@ -6,6 +6,8 @@ use Psr\Http\Message\ServerRequestInterface as HttpRequestInterface;
 use Laminas\View\Model\JsonModel;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Renderer\AbstractRenderer;
+use ZfcDatagrid\Column\AbstractColumn;
+use ZfcDatagrid\Filter;
 use function explode;
 use function count;
 use function strtoupper;
@@ -38,6 +40,22 @@ class Renderer extends AbstractRenderer
     }
 
     /**
+     * Get or create a column by name.
+     *
+     * $name has to be in the format: "aliasName.columnName".
+     *
+     * @return AbstractColumn
+     */
+    public function getColumnByName($name)
+    {
+        $uniqueId = str_replace('.', '_', $name);
+        [$tableAlias, $columnName] = explode('.', $name);
+        $column = $this->getColumn($uniqueId) ?: $this->createColumn($columnName, $tableAlias);
+
+        return $column;
+    }
+
+    /**
      * @return HttpRequestInterface
      *
      * @throws \Exception
@@ -53,6 +71,8 @@ class Renderer extends AbstractRenderer
 
         return $request;
     }
+
+
 
     public function getRequestParam($paramName)
     {
@@ -117,6 +137,7 @@ class Renderer extends AbstractRenderer
                     $sortDirection = 'ASC';
                 }
 
+                #$column = $this->getColumnByName($sortColumn);
                 foreach ($this->getColumns() as $column) {
                     /* @var $column \ZfcDatagrid\Column\AbstractColumn */
                     if ($column->getUniqueId() == $sortColumn) {
@@ -156,12 +177,13 @@ class Renderer extends AbstractRenderer
 
         $groupColumns = $this->getGroupColumns();
 
-        if ($groupColumns != '') {
+        if ('' != $groupColumns) {
             $groupColumns = explode(',', $groupColumns);
-
             foreach ($groupColumns as $groupColumn) {
-                $groupConditions[] = $groupColumn;
-                #$column->setSortActive($sortDirection);
+                $column = $this->getColumnByName($groupColumn);
+
+                $groupConditions[] = $column;
+                #$column->setGroupActive($sortDirection);
             }
         }
 
@@ -183,7 +205,6 @@ class Renderer extends AbstractRenderer
             // set from cache! (for export)
             return $this->filters;
         }
-
 
         $optionsRenderer = $this->getOptionsRenderer();
         $parameterNames  = $optionsRenderer['parameterNames'];
@@ -229,10 +250,24 @@ class Renderer extends AbstractRenderer
         return $this->filters;
     }
 
+    /**
+     * @return AbstractColumn
+     */
+    public function createColumn($columnName, $tableAlias)
+    {
+        return (new Column\Select($columnName, $tableAlias))->setSkipped();
+    }
+
+    /**
+     * @param $column
+     * @param $value
+     *
+     * @return Filter
+     */
     public function createFilter($column, $value)
     {
-        /* @var $column \ZfcDatagrid\Column\AbstractColumn */
-        $filter = new \ZfcDatagrid\Filter();
+        /* @var $column AbstractColumn */
+        $filter = new Filter();
         $filter->setFromColumn($column, $value);
         $column->setFilterActive($filter->getDisplayColumnValue());
 

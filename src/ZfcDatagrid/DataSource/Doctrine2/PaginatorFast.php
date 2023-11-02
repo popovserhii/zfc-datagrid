@@ -73,14 +73,12 @@ class PaginatorFast implements AdapterInterface
         $dqlParts   = $qb->getDQLParts();
         $groupParts = $dqlParts['groupBy'];
 
-        /**
-         * Reset things
-         */
+        // Reset things
         $qb->setFirstResult(null)
             ->setMaxResults(null)
             ->resetDQLParts([
-            'orderBy',
-            'select',
+                'orderBy',
+                'select',
             ]);
 
         if (count($groupParts) > 1) {

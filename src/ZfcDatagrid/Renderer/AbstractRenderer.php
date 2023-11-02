@@ -256,6 +256,9 @@ abstract class AbstractRenderer implements RendererInterface
         return $this->paginator;
     }
 
+    /**
+     * @return AbstractColumn
+     */
     public function getColumn($uniqueId)
     {
         return $this->columns[$uniqueId] ?? false;
