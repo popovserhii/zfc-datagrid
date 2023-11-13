@@ -20,7 +20,9 @@ class DatagridFactory
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null): Datagrid
     {
-        $config = $container->get('config');
+        $config = $container->has('config')
+            ? $container->get('config')
+            : $container->getParameter('config');
 
         if (! isset($config['ZfcDatagrid'])) {
             throw new InvalidArgumentException('Config key "ZfcDatagrid" is missing');
