@@ -40,22 +40,6 @@ class Renderer extends AbstractRenderer
     }
 
     /**
-     * Get or create a column by name.
-     *
-     * $name has to be in the format: "aliasName.columnName".
-     *
-     * @return AbstractColumn
-     */
-    public function getColumnByName($name)
-    {
-        $uniqueId = str_replace('.', '_', $name);
-        [$tableAlias, $columnName] = explode('.', $name);
-        $column = $this->getColumn($uniqueId) ?: $this->createColumn($columnName, $tableAlias);
-
-        return $column;
-    }
-
-    /**
      * @return HttpRequestInterface
      *
      * @throws \Exception
@@ -72,7 +56,28 @@ class Renderer extends AbstractRenderer
         return $request;
     }
 
+    public function actualizeUniqueId($name)
+    {
+        $uniqueId = str_replace('.', '_', $name);
 
+        return $uniqueId;
+    }
+
+    /**
+     * Get or create a column by name.
+     *
+     * $name has to be in the format: "aliasName.columnName".
+     *
+     * @return AbstractColumn
+     */
+    public function getColumnByName($name)
+    {
+        $uniqueId = $this->actualizeUniqueId($name);
+        [$tableAlias, $columnName] = explode('.', $name);
+        $column = $this->getColumn($uniqueId) ?: $this->createColumn($columnName, $tableAlias);
+
+        return $column;
+    }
 
     public function getRequestParam($paramName)
     {
@@ -140,7 +145,7 @@ class Renderer extends AbstractRenderer
                 #$column = $this->getColumnByName($sortColumn);
                 foreach ($this->getColumns() as $column) {
                     /* @var $column \ZfcDatagrid\Column\AbstractColumn */
-                    if ($column->getUniqueId() == $sortColumn) {
+                    if ($column->getUniqueId() == $this->actualizeUniqueId($sortColumn)) {
                         $sortConditions[] = [
                             'sortDirection' => $sortDirection,
                             'column'        => $column,
