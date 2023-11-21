@@ -80,7 +80,7 @@ class Doctrine2 extends AbstractDataSource
 
             foreach ($this->getGroupConditions() as $key => $col) {
                 if (! $col instanceof Column\Select) {
-                    throw new \Exception('This column cannot be sorted: ' . $col->getUniqueId());
+                    throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
                 }
 
                 /* @var $col \ZfcDatagrid\Column\Select */

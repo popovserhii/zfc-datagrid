@@ -123,6 +123,23 @@ class LaminasSelect extends AbstractDataSource
         }
 
         /*
+       * Step 2) Apply grouping
+       */
+        if (! empty($this->getGroupConditions())) {
+            // Minimum one group condition given -> so reset the default groupBy
+            $select->reset(Sql\Select::GROUP);
+
+            foreach ($this->getGroupConditions() as $key => $col) {
+                if (! $col instanceof Column\Select) {
+                    throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
+                }
+
+                /** @var \ZfcDataGrid\Column\AbstractColumn $col */
+                $select->group($col->getUniqueId());
+            }
+        }
+
+        /*
          * Step 2) Apply sorting
          */
         if (! empty($this->getSortConditions())) {
