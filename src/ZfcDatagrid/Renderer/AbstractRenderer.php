@@ -650,18 +650,12 @@ abstract class AbstractRenderer implements RendererInterface
     /**
      * Set filters explicit (e.g. from a custom form).
      *
-     * @param Filter[] $filters
+     * @param FilterGroup $filters
      *
      * @return $this
      */
-    public function setFilters(array $filters): self
+    public function setFilters($filters): self
     {
-        foreach ($filters as $filter) {
-            if (! $filter instanceof Filter) {
-                throw new InvalidArgumentException('Filter have to be an instanceof ZfcDatagrid\Filter');
-            }
-        }
-
         $this->filters = $filters;
 
         return $this;
@@ -845,10 +839,10 @@ abstract class AbstractRenderer implements RendererInterface
             {
                 $sortColumns    = [];
                 $sortDirections = [];
-            foreach ($this->getSortConditions() as $sortCondition) {
-                $sortColumns[]    = $sortCondition['column']->getUniqueId();
-                $sortDirections[] = $sortCondition['sortDirection'];
-            }
+                foreach ($this->getSortConditions() as $sortCondition) {
+                    $sortColumns[]    = $sortCondition['column']->getUniqueId();
+                    $sortDirections[] = $sortCondition['sortDirection'];
+                }
 
                 $activeParameters[$parameterNames['sortColumns']]    = implode(',', $sortColumns);
                 $activeParameters[$parameterNames['sortDirections']] = implode(',', $sortDirections);
