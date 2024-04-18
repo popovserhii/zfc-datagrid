@@ -186,6 +186,11 @@ class Renderer extends AbstractRenderer
             $groupColumns = explode(',', $groupColumns);
             foreach ($groupColumns as $groupColumn) {
                 $column = $this->getColumnByName($groupColumn);
+                //$uniqueId = str_replace('.', '_', $rule['field']);
+                $uniqueId = $column->getUniqueId();
+                if ($this->isGroupByIgnored($uniqueId)) {
+                    continue;
+                }
 
                 $groupConditions[] = $column;
                 #$column->setGroupActive($sortDirection);

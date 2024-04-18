@@ -51,6 +51,9 @@ abstract class AbstractRenderer implements RendererInterface
     /** @var string[]  */
     protected $filtersIgnored = [];
 
+    /** @var string[]  */
+    protected $groupsByIgnored = [];
+
     /** @var int|null */
     protected $currentPageNumber = null;
 
@@ -704,12 +707,23 @@ abstract class AbstractRenderer implements RendererInterface
         return $filterGroup;
     }
 
-    public function setIgnoredFilters($ignoredfilters)
+    public function setIgnoredFilters($ignoredFilters)
     {
-        foreach ($ignoredfilters as $ignored) {
+        foreach ($ignoredFilters as $ignored) {
             // Under the hood we use underscore for fields separation, all others separators must be replaced.
             $uniqueId = str_replace(['.', ':'], '_', $ignored);
             $this->filtersIgnored[$uniqueId] = $uniqueId;
+        }
+
+        return $this;
+    }
+
+    public function setIgnoredGroupsBy($ignoredGroupsBy)
+    {
+        foreach ($ignoredGroupsBy as $ignored) {
+            // Under the hood we use underscore for fields separation, all others separators must be replaced.
+            $uniqueId = str_replace(['.', ':'], '_', $ignored);
+            $this->groupsByIgnored[$uniqueId] = $uniqueId;
         }
 
         return $this;
@@ -732,15 +746,51 @@ abstract class AbstractRenderer implements RendererInterface
         }
 
         foreach ($this->filtersIgnored as $ignored) {
-            // The first if checks if $ignored is the placeholder with the asterisk at the end (aka. work.*).
-            // The second if makes a revers checking if $filter starts with $ignored without the asteriks.
-            // @see https://stackoverflow.com/a/10473026/1335142
-            if (substr_compare($ignored, '*', -strlen('*')) === 0) {
-                if (substr_compare($uniqueId, rtrim($ignored, '*'), 0, strlen(rtrim($ignored, '*'))) === 0) {
-                    return true;
-                }
+            if ($this->isIgnored($ignored)) {
+                return true;
             }
         }
+
+        return false;
+    }
+
+    /**
+     * @param $groupBy
+     *
+     * @return bool
+     */
+    public function isGroupByIgnored($groupBy)
+    {
+        if (!$this->groupsByIgnored) {
+            return false;
+        }
+
+        $uniqueId = $groupBy;
+        if (isset($this->groupsByIgnored[$uniqueId])) {
+            return true;
+        }
+
+        foreach ($this->groupsByIgnored as $ignored) {
+            if ($this->isIgnored($ignored)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isIgnored($ignored)
+    {
+        // The first if checks if $ignored is the placeholder with the asterisk at the end (aka. work.*).
+        // The second if makes a revers checking if $filter starts with $ignored without the asteriks.
+        // @see https://stackoverflow.com/a/10473026/1335142
+        if (substr_compare($ignored, '*', -strlen('*')) === 0) {
+            if (substr_compare($uniqueId, rtrim($ignored, '*'), 0, strlen(rtrim($ignored, '*'))) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
