@@ -746,7 +746,7 @@ abstract class AbstractRenderer implements RendererInterface
         }
 
         foreach ($this->filtersIgnored as $ignored) {
-            if ($this->isIgnored($ignored)) {
+            if ($this->isIgnored($uniqueId, $ignored)) {
                 return true;
             }
         }
@@ -771,7 +771,7 @@ abstract class AbstractRenderer implements RendererInterface
         }
 
         foreach ($this->groupsByIgnored as $ignored) {
-            if ($this->isIgnored($ignored)) {
+            if ($this->isIgnored($uniqueId, $ignored)) {
                 return true;
             }
         }
@@ -779,7 +779,7 @@ abstract class AbstractRenderer implements RendererInterface
         return false;
     }
 
-    public function isIgnored($ignored)
+    public function isIgnored($uniqueId, $ignored)
     {
         // The first if checks if $ignored is the placeholder with the asterisk at the end (aka. work.*).
         // The second if makes a revers checking if $filter starts with $ignored without the asteriks.
