@@ -128,8 +128,8 @@ class Renderer extends AbstractRenderer
         $sortDirections = $this->getSortDirections();
 
         if ($sortColumns != '') {
-            $sortColumns    = explode(',', $sortColumns);
-            $sortDirections = explode(',', $sortDirections);
+            $sortColumns    = explode(',', (string) $sortColumns);
+            $sortDirections = explode(',', (string) $sortDirections);
 
             if (count($sortColumns) !== count($sortDirections)) {
                 throw new \Exception('Count missmatch order columns/direction');
