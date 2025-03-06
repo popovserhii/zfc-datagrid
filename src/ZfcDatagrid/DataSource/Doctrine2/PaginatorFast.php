@@ -43,7 +43,7 @@ class PaginatorFast implements AdapterInterface
      *
      * @return array
      */
-    public function getItems($offset, $itemCountPerPage)
+    public function getItems($offset, $itemCountPerPage): array
     {
         $qb = $this->getQueryBuilder();
         $qb->setFirstResult($offset)->setMaxResults($itemCountPerPage);
@@ -61,7 +61,7 @@ class PaginatorFast implements AdapterInterface
      *
      * @return int
      */
-    public function count()
+    public function count(): int
     {
         if ($this->rowCount !== null) {
             return $this->rowCount;
