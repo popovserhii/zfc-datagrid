@@ -42,16 +42,16 @@ class DatagridFactory
 
         #$this->setCache(Cache\StorageFactory::factory($options['cache']));
         $cacheConfig = $config['ZfcDatagrid']['cache'];
-//        $cacheConfig['adapter'] = $cacheConfig['adapter']['name'];
-//        $adapterPluginManager = new AdapterPluginManager($container);
-//        $cache = $adapterPluginManager->get(
-//            $cacheConfig['adapter'],
-//            $cacheConfig
-//        );
+        $cacheConfig['adapter'] = $cacheConfig['adapter']['name'];
+        $adapterPluginManager = new AdapterPluginManager($container);
+        $cache = $adapterPluginManager->get(
+            $cacheConfig['adapter'],
+            $cacheConfig
+        );
 
         //$cache = new \Laminas\Cache\Storage\Adapter\Filesystem([], null);
         $cache = new \Laminas\Cache\Storage\Adapter\Filesystem();
-        $cache->addPlugin(new \Laminas\Cache\Storage\Plugin\Serializer());
+        $cache->addPlugin(new \Laminas\Cache\Storage\Plugin\Serializer($adapterPluginManager));
 
         $grid->setCache($cache);
 

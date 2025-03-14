@@ -1,7 +1,7 @@
 <?php
 namespace ZfcDatagrid\Service;
 
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\Db\Adapter\Adapter;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
@@ -14,7 +14,7 @@ class LaminasDbAdapterFactory implements FactoryInterface
      *
      * @return Adapter
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
+    public function __invoke(ContainerInterface $container, $requestedName, array $options = null): mixed
     {
         $config = $container->get('config');
 

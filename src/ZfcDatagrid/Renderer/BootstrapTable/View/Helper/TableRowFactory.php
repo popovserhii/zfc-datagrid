@@ -1,7 +1,7 @@
 <?php
 namespace ZfcDatagrid\Renderer\BootstrapTable\View\Helper;
 
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class TableRowFactory implements FactoryInterface

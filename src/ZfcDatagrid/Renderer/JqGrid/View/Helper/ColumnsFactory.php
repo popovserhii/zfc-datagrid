@@ -1,7 +1,7 @@
 <?php
 namespace ZfcDatagrid\Renderer\JqGrid\View\Helper;
 
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use Laminas\ServiceManager\Factory\FactoryInterface;
 
 class ColumnsFactory implements FactoryInterface
