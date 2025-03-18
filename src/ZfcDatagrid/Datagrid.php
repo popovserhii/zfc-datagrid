@@ -243,7 +243,7 @@ class Datagrid
      *
      * @return $this
      */
-    public function setSession(SessionContainer $session): self
+    public function setSession($session): self
     {
         $this->session = $session;
 
@@ -257,7 +257,7 @@ class Datagrid
      *
      * @return SessionContainer
      */
-    public function getSession(): SessionContainer
+    public function getSession()
     {
         if (null === $this->session) {
             // Using fully qualified name, to ensure polyfill class alias is used
@@ -309,9 +309,7 @@ class Datagrid
     public function getCacheId(): string
     {
         if (null === $this->cacheId) {
-            $this->cacheId = md5($this->getSession()
-                ->getManager()
-                ->getId() . '_' . $this->getId());
+            $this->cacheId = md5($this->getSession()->getId() . '_' . $this->getId());
         }
 
         return $this->cacheId;

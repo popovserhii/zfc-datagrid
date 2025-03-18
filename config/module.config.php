@@ -9,6 +9,8 @@ use ZfcDatagrid\Translator;
 use Laminas\Db\Adapter\Adapter;
 use Laminas\Cache\Storage;
 use Laminas\ServiceManager\Factory\InvokableFactory;
+use Laminas\Serializer\Adapter\PhpSerialize;
+use Laminas\Serializer\GenericSerializerFactory;
 
 return [
     'ZfcDatagrid' => [
@@ -47,9 +49,8 @@ return [
 
         // The cache is used to save the filter + sort and other things for exporting
         'cache' => [
-
             'adapter' => [
-                'name'    => Storage\Adapter\Filesystem::class,
+                'name' => Storage\Adapter\Filesystem::class,
             ],
             'plugins' => [
                 'exception_handler' => [
@@ -214,7 +215,10 @@ return [
             Datagrid::class => Service\DatagridFactory::class,
 
             Adapter::class => Service\LaminasDbAdapterFactory::class,
+            //PhpSerialize::class => PhpSerializeFactory::class,
+            //PhpSerialize::class =>  new GenericSerializerFactory(PhpSerialize::class),
             Middleware\RequestHelper::class => Middleware\RequestHelperFactory::class,
+            Middleware\SessionHelper::class => Middleware\SessionHelperFactory::class,
             Router\RouterInterface::class => Router\RouterFactory::class,
             Translator\TranslatorInterface::class => Translator\TranslatorFactory::class,
 
