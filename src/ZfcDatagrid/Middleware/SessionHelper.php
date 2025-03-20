@@ -16,6 +16,9 @@ class SessionHelper
     /** @var ServerRequestInterface|null  */
     protected $session;
 
+    
+    protected $requestStack;
+ 
     public function __construct($session = null)
     {
         $this->session = $session;
