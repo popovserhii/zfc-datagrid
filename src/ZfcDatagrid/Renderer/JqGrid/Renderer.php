@@ -153,6 +153,21 @@ class Renderer extends AbstractRenderer
         $sortColumns = $this->getSortColumns();
         $sortDirections = $this->getSortDirections();
 
+        $sortConditions = $this->prepareSortConditions($sortColumns, $sortDirections);
+
+        if (! empty($sortConditions)) {
+            $this->sortConditions = $sortConditions;
+        } else {
+            // No user sorting -> get default sorting
+            $this->sortConditions = $this->getSortConditionsDefault();
+        }
+
+        return $this->sortConditions;
+    }
+
+    public function prepareSortConditions($sortColumns, $sortDirections): array
+    {
+        $sortConditions = [];
         if ($sortColumns != '') {
             $sortColumns    = explode(',', $sortColumns);
             $sortDirections = explode(',', $sortDirections);
@@ -174,7 +189,7 @@ class Renderer extends AbstractRenderer
                     if ($column->getUniqueId() == $this->actualizeUniqueId($sortColumn)) {
                         $sortConditions[] = [
                             'sortDirection' => $sortDirection,
-                            'column'        => $column,
+                            'column' => $column,
                         ];
 
                         $column->setSortActive($sortDirection);
@@ -183,14 +198,7 @@ class Renderer extends AbstractRenderer
             }
         }
 
-        if (! empty($sortConditions)) {
-            $this->sortConditions = $sortConditions;
-        } else {
-            // No user sorting -> get default sorting
-            $this->sortConditions = $this->getSortConditionsDefault();
-        }
-
-        return $this->sortConditions;
+        return $sortConditions;
     }
 
     /**
@@ -207,27 +215,32 @@ class Renderer extends AbstractRenderer
         }
 
         $groupColumns = $this->getGroupColumns();
-
         if ('' != $groupColumns) {
             $groupColumns = explode(',', $groupColumns);
-            foreach ($groupColumns as $groupColumn) {
-                $column = $this->getColumnByName($groupColumn);
-                //$uniqueId = str_replace('.', '_', $rule['field']);
-                $uniqueId = $column->getUniqueId();
-                if ($this->isGroupByIgnored($uniqueId)) {
-                    continue;
-                }
-
-                $groupConditions[] = $column;
-                #$column->setGroupActive($sortDirection);
-            }
+            $groupConditions = $this->prepareGroupConditions($groupColumns);
         }
 
-        if (! empty($groupConditions)) {
+        if (!empty($groupConditions)) {
             $this->groupConditions = $groupConditions;
         }
 
         return $this->groupConditions;
+    }
+
+    public function prepareGroupConditions($groupColumns): array
+    {
+        $groupConditions = [];
+        foreach ($groupColumns as $groupColumn) {
+            $column = $this->getColumnByName($groupColumn);
+            $uniqueId = $column->getUniqueId();
+            if ($this->isGroupByIgnored($uniqueId)) {
+                continue;
+            }
+
+            $groupConditions[] = $column;
+        }
+
+        return $groupConditions;
     }
 
     /**

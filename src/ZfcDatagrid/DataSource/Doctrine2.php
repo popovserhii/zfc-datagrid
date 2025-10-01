@@ -18,6 +18,16 @@ class Doctrine2 extends AbstractDataSource
     private $filterColumn;
 
     /**
+     * @var Doctrine2\Grouping
+     */
+    private $groupColumn;
+
+    /**
+     * @var Doctrine2\Sorting
+     */
+    private $sortColumn;
+
+    /**
      * Data source.
      *
      * @param ORM\QueryBuilder $data
@@ -42,6 +52,24 @@ class Doctrine2 extends AbstractDataSource
         }
 
         return $this->filterColumn;
+    }
+
+    public function getGroupColumn()
+    {
+        if (!$this->groupColumn) {
+            $this->groupColumn = new Doctrine2\Grouping($this->qb);
+        }
+
+        return $this->groupColumn;
+    }
+
+    public function getSortColumn()
+    {
+        if (!$this->sortColumn) {
+            $this->sortColumn = new Doctrine2\Sorting($this->qb);
+        }
+
+        return $this->sortColumn;
     }
 
     /**
@@ -74,67 +102,71 @@ class Doctrine2 extends AbstractDataSource
         /*
          * Step 2) Apply grouping
          */
-        if (! empty($this->getGroupConditions())) {
-            // Minimum one group condition given -> so reset the default groupBy
-            $qb->resetDQLPart('groupBy');
-
-            foreach ($this->getGroupConditions() as $key => $col) {
-                if (! $col instanceof Column\Select) {
-                    throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
-                }
-
-                /* @var $col \ZfcDatagrid\Column\Select */
-                $colString = $col->getSelectPart1();
-                if ($col->getSelectPart2() != '') {
-                    $colString .= '.' . $col->getSelectPart2();
-                }
-
-                //$qb->add('groupBy', new Expr\GroupBy($col->getUniqueId()), true);
-                $qb->add('groupBy', new Expr\GroupBy($colString), true);
-            }
-        }
+        $groupColumn = $this->getGroupColumn();
+        $groupColumn->applyGroups($this->getGroupConditions());
+//        if (! empty($this->getGroupConditions())) {
+//            // Minimum one group condition given -> so reset the default groupBy
+//            $qb->resetDQLPart('groupBy');
+//
+//            foreach ($this->getGroupConditions() as $key => $col) {
+//                if (! $col instanceof Column\Select) {
+//                    throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
+//                }
+//
+//                /* @var $col \ZfcDatagrid\Column\Select */
+//                $colString = $col->getSelectPart1();
+//                if ($col->getSelectPart2() != '') {
+//                    $colString .= '.' . $col->getSelectPart2();
+//                }
+//
+//                //$qb->add('groupBy', new Expr\GroupBy($col->getUniqueId()), true);
+//                $qb->add('groupBy', new Expr\GroupBy($colString), true);
+//            }
+//        }
 
         /*
          * Step 3) Apply sorting
          */
-        if (! empty($this->getSortConditions())) {
-            // Minimum one sort condition given -> so reset the default orderBy
-            $qb->resetDQLPart('orderBy');
-
-            foreach ($this->getSortConditions() as $key => $sortCondition) {
-                /* @var $col \ZfcDatagrid\Column\AbstractColumn */
-                $col = $sortCondition['column'];
-
-                if (! $col instanceof Column\Select) {
-                    throw new \Exception('This column cannot be sorted: ' . $col->getUniqueId());
-                }
-
-                /* @var $col \ZfcDatagrid\Column\Select */
-                $colString = $col->getSelectPart1();
-                if ($col->getSelectPart2() != '') {
-                    $colString .= '.' . $col->getSelectPart2();
-                }
-
-                if ($col->getType() instanceof Type\Number) {
-                    $qb->addSelect('ABS(' . $colString . ') sortColumn' . $key);
-                    $qb->add('orderBy', new Expr\OrderBy('sortColumn' . $key, $sortCondition['sortDirection']), true);
-                } else {
-                    $qb->add('orderBy', new Expr\OrderBy($col->getUniqueId(), $sortCondition['sortDirection']), true);
-                }
-            }
-        }
+        $sortColumn = $this->getSortColumn();
+        $sortColumn->applySorts($this->getSortConditions());
+//        if (! empty($this->getSortConditions())) {
+//            // Minimum one sort condition given -> so reset the default orderBy
+//            $qb->resetDQLPart('orderBy');
+//
+//            foreach ($this->getSortConditions() as $key => $sortCondition) {
+//                /* @var $col \ZfcDatagrid\Column\AbstractColumn */
+//                $col = $sortCondition['column'];
+//
+//                if (! $col instanceof Column\Select) {
+//                    throw new \Exception('This column cannot be sorted: ' . $col->getUniqueId());
+//                }
+//
+//                /* @var $col \ZfcDatagrid\Column\Select */
+//                $colString = $col->getSelectPart1();
+//                if ($col->getSelectPart2() != '') {
+//                    $colString .= '.' . $col->getSelectPart2();
+//                }
+//
+//                if ($col->getType() instanceof Type\Number) {
+//                    $qb->addSelect('ABS(' . $colString . ') sortColumn' . $key);
+//                    $qb->add('orderBy', new Expr\OrderBy('sortColumn' . $key, $sortCondition['sortDirection']), true);
+//                } else {
+//                    $qb->add('orderBy', new Expr\OrderBy($col->getUniqueId(), $sortCondition['sortDirection']), true);
+//                }
+//            }
+//        }
 
         /*
          * Step 4) Apply filters
          */
-        $filterColumn = $this->getFilterColumn();
+        $groupColumn = $this->getFilterColumn();
         /*foreach ($this->getFilters() as $filter) {
             if ($filter->isColumnFilter() === true) {
                 $filterColumn->applyFilter($filter);
             }
         }*/
         //$filterColumn->applyFilter($this->getFilters());
-        $filterColumn->applyFilters($this->getFilterGroup());
+        $groupColumn->applyFilters($this->getFilterGroup());
 
         /*
          * Step 5) Pagination
