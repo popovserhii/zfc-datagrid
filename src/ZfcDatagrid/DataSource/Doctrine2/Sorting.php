@@ -62,7 +62,7 @@ class Sorting
         // Minimum one sort condition given -> so reset the default orderBy
         $qb->resetDQLPart('orderBy');
 
-        foreach ($this->getSortConditions() as $key => $sortCondition) {
+        foreach ($sorts as $key => $sortCondition) {
             /* @var $col \ZfcDatagrid\Column\AbstractColumn */
             $col = $sortCondition['column'];
 
