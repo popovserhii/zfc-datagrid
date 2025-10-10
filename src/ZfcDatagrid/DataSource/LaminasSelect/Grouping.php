@@ -78,7 +78,7 @@ class Grouping
         // Minimum one group condition given -> so reset the default groupBy
         $select->reset(Select::GROUP);
 
-        foreach ($this->getGroupConditions() as $key => $col) {
+        foreach ($groups as $key => $col) {
             if (! $col instanceof Column\Select) {
                 throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
             }
