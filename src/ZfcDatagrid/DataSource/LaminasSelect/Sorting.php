@@ -15,28 +15,29 @@
 namespace ZfcDatagrid\DataSource\LaminasSelect;
 
 use Laminas\Db\Sql\Select;
-use Laminas\Db\Sql\Sql;
+use Laminas\Db\Sql;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\FilterGroup;
+use ZfcDataGrid\Column\AbstractColumn;
 
 class Sorting
 {
     /**
-     * @var Sql
+     * @var Sql\Sql
      */
     private $sql;
 
     /**
-     * @var Select
+     * @var Sql\Select
      */
     private $select;
 
     /**
      * Filter constructor.
-     * @param Sql $sql
-     * @param Select $select
+     * @param Sql\Sql $sql
+     * @param Sql\Select $select
      */
-    public function __construct(Sql $sql, Select $select)
+    public function __construct(Sql\Sql $sql, Sql\Select $select)
     {
         $this->sql    = $sql;
         $this->select = $select;
@@ -45,15 +46,15 @@ class Sorting
     /**
      * @return Sql
      */
-    public function getSql(): Sql
+    public function getSql(): Sql\Sql
     {
         return $this->sql;
     }
 
     /**
-     * @return Select
+     * @return Sql\Select
      */
-    public function getSelect(): Select
+    public function getSelect(): Sql\Select
     {
         return $this->select;
     }
@@ -78,7 +79,7 @@ class Sorting
         $select->reset(Sql\Select::ORDER);
 
         foreach ($sorts as $sortCondition) {
-            /** @var \ZfcDataGrid\Column\AbstractColumn $col */
+            /** @var AbstractColumn $col */
             $col = $sortCondition['column'];
             $select->order($col->getUniqueId() . ' ' . $sortCondition['sortDirection']);
         }

@@ -18,7 +18,9 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM;
 use Doctrine\ORM\Query\Expr;
 use ZfcDatagrid\Column;
+use ZfcDatagrid\Column\Type;
 use ZfcDatagrid\FilterGroup;
+use ZfcDataGrid\Column\AbstractColumn;
 
 class Sorting
 {
@@ -63,14 +65,14 @@ class Sorting
         $qb->resetDQLPart('orderBy');
 
         foreach ($sorts as $key => $sortCondition) {
-            /* @var $col \ZfcDatagrid\Column\AbstractColumn */
+            /* @var $col AbstractColumn */
             $col = $sortCondition['column'];
 
             if (! $col instanceof Column\Select) {
                 throw new \Exception('This column cannot be sorted: ' . $col->getUniqueId());
             }
 
-            /* @var $col \ZfcDatagrid\Column\Select */
+            /* @var $col Column\Select */
             $colString = $col->getSelectPart1();
             if ($col->getSelectPart2() != '') {
                 $colString .= '.' . $col->getSelectPart2();

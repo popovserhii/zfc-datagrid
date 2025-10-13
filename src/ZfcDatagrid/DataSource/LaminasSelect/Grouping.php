@@ -14,30 +14,30 @@
 
 namespace ZfcDatagrid\DataSource\LaminasSelect;
 
-use Laminas\Db\Sql\Sql;
-use Laminas\Db\Sql\Expression;
 use Laminas\Db\Sql\Select;
+use Laminas\Db\Sql;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\FilterGroup;
+use ZfcDataGrid\Column\AbstractColumn;
 
 class Grouping
 {
     /**
-     * @var Sql
+     * @var Sql\Sql
      */
     private $sql;
 
     /**
-     * @var Select
+     * @var Sql\Select
      */
     private $select;
 
     /**
      * Filter constructor.
-     * @param Sql $sql
-     * @param Select $select
+     * @param Sql\Sql $sql
+     * @param Sql\Select $select
      */
-    public function __construct(Sql $sql, Select $select)
+    public function __construct(Sql\Sql $sql, Sql\Select $select)
     {
         $this->sql    = $sql;
         $this->select = $select;
@@ -46,15 +46,15 @@ class Grouping
     /**
      * @return Sql
      */
-    public function getSql(): ql
+    public function getSql(): Sql\Sql
     {
         return $this->sql;
     }
 
     /**
-     * @return Select
+     * @return Sql\Select
      */
-    public function getSelect(): Select
+    public function getSelect(): Sql\Select
     {
         return $this->select;
     }
@@ -76,14 +76,14 @@ class Grouping
         $select = $this->getSelect();
 
         // Minimum one group condition given -> so reset the default groupBy
-        $select->reset(Select::GROUP);
+        $select->reset(Sql\Select::GROUP);
 
         foreach ($groups as $key => $col) {
             if (! $col instanceof Column\Select) {
                 throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
             }
 
-            /** @var \ZfcDataGrid\Column\AbstractColumn $col */
+            /** @var AbstractColumn $col */
             $select->group($col->getUniqueId());
         }
     }
