@@ -21,6 +21,16 @@ class LaminasSelect extends AbstractDataSource
     private $filterColumn;
 
     /**
+     * @var LaminasSelect\Grouping
+     */
+    private $groupColumn;
+
+    /**
+     * @var LaminasSelect\Sorting
+     */
+    private $sortColumn;
+
+    /**
      * Data source.
      *
      * @param Sql\Select $data
@@ -48,6 +58,25 @@ class LaminasSelect extends AbstractDataSource
         }
 
         return $this->filterColumn;
+    }
+
+
+    public function getGroupColumn()
+    {
+        if (!$this->groupColumn) {
+            $this->groupColumn = new LaminasSelect\Grouping($this->getAdapter(), $this->select);
+        }
+
+        return $this->groupColumn;
+    }
+
+    public function getSortColumn()
+    {
+        if (!$this->sortColumn) {
+            $this->sortColumn = new LaminasSelect\Sorting($this->getAdapter(), $this->select);
+        }
+
+        return $this->sortColumn;
     }
 
     /**
@@ -125,44 +154,50 @@ class LaminasSelect extends AbstractDataSource
         /*
        * Step 2) Apply grouping
        */
-        if (! empty($this->getGroupConditions())) {
-            // Minimum one group condition given -> so reset the default groupBy
-            $select->reset(Sql\Select::GROUP);
+        $groupColumn = $this->getGroupColumn();
+        $groupColumn->applyGroups($this->getGroupConditions());
 
-            foreach ($this->getGroupConditions() as $key => $col) {
-                if (! $col instanceof Column\Select) {
-                    throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
-                }
-
-                /** @var \ZfcDataGrid\Column\AbstractColumn $col */
-                $select->group($col->getUniqueId());
-            }
-        }
+//        if (! empty($this->getGroupConditions())) {
+//            // Minimum one group condition given -> so reset the default groupBy
+//            $select->reset(Sql\Select::GROUP);
+//
+//            foreach ($this->getGroupConditions() as $key => $col) {
+//                if (! $col instanceof Column\Select) {
+//                    throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
+//                }
+//
+//                /** @var \ZfcDataGrid\Column\AbstractColumn $col */
+//                $select->group($col->getUniqueId());
+//            }
+//        }
 
         /*
          * Step 2) Apply sorting
          */
-        if (! empty($this->getSortConditions())) {
-            // Minimum one sort condition given -> so reset the default orderBy
-            $select->reset(Sql\Select::ORDER);
+        $sortColumn = $this->getSortColumn();
+        $sortColumn->applySorts($this->getSortConditions());
 
-            foreach ($this->getSortConditions() as $sortCondition) {
-                /** @var \ZfcDataGrid\Column\AbstractColumn $col */
-                $col = $sortCondition['column'];
-                $select->order($col->getUniqueId() . ' ' . $sortCondition['sortDirection']);
-            }
-        }
+//        if (! empty($this->getSortConditions())) {
+//            // Minimum one sort condition given -> so reset the default orderBy
+//            $select->reset(Sql\Select::ORDER);
+//
+//            foreach ($this->getSortConditions() as $sortCondition) {
+//                /** @var \ZfcDataGrid\Column\AbstractColumn $col */
+//                $col = $sortCondition['column'];
+//                $select->order($col->getUniqueId() . ' ' . $sortCondition['sortDirection']);
+//            }
+//        }
 
         /*
          * Step 3) Apply filters
          */
         $filterColumn = $this->getFilterColumn();
+        $filterColumn->applyFilters($this->getFilterGroup());
 //        foreach ($this->getFilterGroup() as $filter) {
 //            if ($filter->isColumnFilter() === true) {
 //                $filterColumn->applyFilter($filter);
 //            }
 //        }
-        $filterColumn->applyFilters($this->getFilterGroup());
 
         /*
          * Step 4) Pagination

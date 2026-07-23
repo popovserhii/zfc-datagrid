@@ -64,6 +64,27 @@ class Renderer extends AbstractRenderer
     }
 
     /**
+     * Filters can be applied only to a "simple" column.
+     * If a column has an Expression under the hood then this column should be ignored in the following fiters appling.
+     * 
+     * @param $column
+     *
+     * @return bool
+     */
+    public function isColumnFilterable($column)
+    {
+        if (!$column) {
+            return false;
+        }
+
+        if (!is_string($column->getSelectPart1()) || !is_string($column->getSelectPart2())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Get or create a column by name.
      *
      * $name has to be in the format: "aliasName.columnName".
@@ -73,8 +94,11 @@ class Renderer extends AbstractRenderer
     public function getColumnByName($name)
     {
         $uniqueId = $this->actualizeUniqueId($name);
-        [$tableAlias, $columnName] = explode('.', $name);
-        $column = $this->getColumn($uniqueId) ?: $this->createColumn($columnName, $tableAlias);
+        $column = $this->getColumn($uniqueId);
+        if (!$this->isColumnFilterable($column)) {
+            [$tableAlias, $columnName] = explode('.', $name);
+            $column = $this->createColumn($columnName, $tableAlias);
+        }
 
         return $column;
     }
@@ -89,11 +113,13 @@ class Renderer extends AbstractRenderer
         $postParams = $request->getParsedBody();
         $queryParams = $request->getQueryParams();
 
-        $sortColumns = $postParams[$parameterNames[$paramName]]
+        // Checking order: POST -> GET -> Headers
+        $param = $postParams[$parameterNames[$paramName]]
             ?? $queryParams[$parameterNames[$paramName]]
+            ?? $request->getHeaderLine($parameterNames[$paramName])
             ?? null;
 
-        return $sortColumns;
+        return $param;
     }
 
     public function getGroupColumns()
@@ -127,6 +153,21 @@ class Renderer extends AbstractRenderer
         $sortColumns = $this->getSortColumns();
         $sortDirections = $this->getSortDirections();
 
+        $sortConditions = $this->prepareSortConditions($sortColumns, $sortDirections);
+
+        if (! empty($sortConditions)) {
+            $this->sortConditions = $sortConditions;
+        } else {
+            // No user sorting -> get default sorting
+            $this->sortConditions = $this->getSortConditionsDefault();
+        }
+
+        return $this->sortConditions;
+    }
+
+    public function prepareSortConditions($sortColumns, $sortDirections): array
+    {
+        $sortConditions = [];
         if ($sortColumns != '') {
             $sortColumns    = explode(',', (string) $sortColumns);
             $sortDirections = explode(',', (string) $sortDirections);
@@ -148,7 +189,7 @@ class Renderer extends AbstractRenderer
                     if ($column->getUniqueId() == $this->actualizeUniqueId($sortColumn)) {
                         $sortConditions[] = [
                             'sortDirection' => $sortDirection,
-                            'column'        => $column,
+                            'column' => $column,
                         ];
 
                         $column->setSortActive($sortDirection);
@@ -157,14 +198,7 @@ class Renderer extends AbstractRenderer
             }
         }
 
-        if (! empty($sortConditions)) {
-            $this->sortConditions = $sortConditions;
-        } else {
-            // No user sorting -> get default sorting
-            $this->sortConditions = $this->getSortConditionsDefault();
-        }
-
-        return $this->sortConditions;
+        return $sortConditions;
     }
 
     /**
@@ -181,27 +215,32 @@ class Renderer extends AbstractRenderer
         }
 
         $groupColumns = $this->getGroupColumns();
-
         if ('' != $groupColumns) {
             $groupColumns = explode(',', $groupColumns);
-            foreach ($groupColumns as $groupColumn) {
-                $column = $this->getColumnByName($groupColumn);
-                //$uniqueId = str_replace('.', '_', $rule['field']);
-                $uniqueId = $column->getUniqueId();
-                if ($this->isGroupByIgnored($uniqueId)) {
-                    continue;
-                }
-
-                $groupConditions[] = $column;
-                #$column->setGroupActive($sortDirection);
-            }
+            $groupConditions = $this->prepareGroupConditions($groupColumns);
         }
 
-        if (! empty($groupConditions)) {
+        if (!empty($groupConditions)) {
             $this->groupConditions = $groupConditions;
         }
 
         return $this->groupConditions;
+    }
+
+    public function prepareGroupConditions($groupColumns): array
+    {
+        $groupConditions = [];
+        foreach ($groupColumns as $groupColumn) {
+            $column = $this->getColumnByName($groupColumn);
+            $uniqueId = $column->getUniqueId();
+            if ($this->isGroupByIgnored($uniqueId)) {
+                continue;
+            }
+
+            $groupConditions[] = $column;
+        }
+
+        return $groupConditions;
     }
 
     /**
