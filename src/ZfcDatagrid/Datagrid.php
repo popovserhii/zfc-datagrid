@@ -42,7 +42,7 @@ class Datagrid
     protected $options = [];
 
     /** @var SessionContainer|null */
-    protected $session;
+    //protected $session;
 
     /** @var Cache\Storage\StorageInterface|null */
     protected $cache;
@@ -236,36 +236,36 @@ class Datagrid
         return $this->id;
     }
 
-    /**
-     * Set the session.
-     *
-     * @param SessionContainer $session
-     *
-     * @return $this
-     */
-    public function setSession($session): self
-    {
-        $this->session = $session;
-
-        return $this;
-    }
-
-    /**
-     * Get session container.
-     *
-     * Instantiate session container if none currently exists
-     *
-     * @return SessionContainer
-     */
-    public function getSession()
-    {
-        if (null === $this->session) {
-            // Using fully qualified name, to ensure polyfill class alias is used
-            $this->session = new SessionContainer($this->getId());
-        }
-
-        return $this->session;
-    }
+//    /**
+//     * Set the session.
+//     *
+//     * @param SessionContainer $session
+//     *
+//     * @return $this
+//     */
+//    public function setSession($session): self
+//    {
+//        $this->session = $session;
+//
+//        return $this;
+//    }
+//
+//    /**
+//     * Get session container.
+//     *
+//     * Instantiate session container if none currently exists
+//     *
+//     * @return SessionContainer
+//     */
+//    public function getSession()
+//    {
+//        if (null === $this->session) {
+//            // Using fully qualified name, to ensure polyfill class alias is used
+//            $this->session = new SessionContainer($this->getId());
+//        }
+//
+//        return $this->session;
+//    }
 
     /**
      * @param Cache\Storage\StorageInterface $cache
@@ -309,7 +309,8 @@ class Datagrid
     public function getCacheId(): string
     {
         if (null === $this->cacheId) {
-            $this->cacheId = md5($this->getSession()->getId() . '_' . $this->getId());
+            $scopeId = session_id() ?: 'cli';
+            $this->cacheId = md5($scopeId . '_' . $this->getId());
         }
 
         return $this->cacheId;

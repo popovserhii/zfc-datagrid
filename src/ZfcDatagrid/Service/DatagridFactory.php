@@ -36,17 +36,17 @@ class DatagridFactory
         /** @var RequestHelper $requestHelper */
         $requestHelper = $container->get(RequestHelper::class);
         /** @var SessionHelper $sessionHelper */
-        $sessionHelper = $container->get(SessionHelper::class);
+        //$sessionHelper = $container->get(SessionHelper::class);
         /** @var RouterInterface $router */
         $router = $container->get(RouterInterface::class);
         
         $request = $requestHelper->getRequest();
-        $session = $sessionHelper->getSession();
+        //$session = $sessionHelper->getSession();
 
         $grid = new Datagrid();
         $grid->setOptions($config['ZfcDatagrid']);
         $grid->setRequest($request);
-        $grid->setSession($session);
+        //$grid->setSession($session);
         $grid->setRouter($router);
 
         //this->setCache(Cache\StorageFactory::factory($options['cache']));
