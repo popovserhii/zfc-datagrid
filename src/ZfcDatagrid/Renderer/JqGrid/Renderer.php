@@ -233,7 +233,7 @@ class Renderer extends AbstractRenderer
             // User filtering
             foreach ($this->getColumns() as $column) {
                 $values = $postParams['filters'] ?? $queryParams['filters'] ?? [];
-                $extendedFilters = $this->prepareFilter(json_decode($values ?? [], true));
+                $extendedFilters = $this->prepareFilters(json_decode($values ?? [], true));
 
                 $simpleFilter = $postParams[$column->getUniqueId()] ?? $queryParams[$column->getUniqueId()] ?? null;
                 #$value = $request->getPost($column->getUniqueId(), $request->getQuery($column->getUniqueId()));
@@ -302,7 +302,7 @@ class Renderer extends AbstractRenderer
             }
             if ($values && $key === 'groups') {
                 foreach ($values as $sub) {
-                    $this->prepareFilter($sub);
+                    $this->prepareFilters($sub);
                 }
             }
         }
