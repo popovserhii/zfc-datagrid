@@ -96,8 +96,14 @@ class Renderer extends AbstractRenderer
         $uniqueId = $this->actualizeUniqueId($name);
         $column = $this->getColumn($uniqueId);
         if (!$this->isColumnFilterable($column)) {
-            [$tableAlias, $columnName] = explode('.', $name);
-            $column = $this->createColumn($columnName, $tableAlias);
+            // Check if name contains the aliasName, otherwise consider the whole name as the columnName.
+            if ((strpos($name, '.') !== false)) {
+                [$tableAlias, $columnName] = explode('.', $name);
+            } else {
+                $columnName = $name;
+            }
+
+            $column = $this->createColumn($columnName, $tableAlias ?? null);
         }
 
         return $column;
@@ -302,7 +308,7 @@ class Renderer extends AbstractRenderer
     /**
      * @return AbstractColumn
      */
-    public function createColumn($columnName, $tableAlias)
+    public function createColumn($columnName, $tableAlias = null)
     {
         return (new Column\Select($columnName, $tableAlias))->setSkipped();
     }
