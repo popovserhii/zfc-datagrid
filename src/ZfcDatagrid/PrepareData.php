@@ -195,9 +195,10 @@ class PrepareData
                     $row[$col->getUniqueId()] = $dataPopulation->toString();
                 }
 
-                if (! isset($row[$col->getUniqueId()])) {
-                    $row[$col->getUniqueId()] = '';
-                }
+                // For correct JSON-schema, the explicit value must be returned (for example, NULL as well)
+                //if (! isset($row[$col->getUniqueId()])) {
+                //    $row[$col->getUniqueId()] = '';
+                //}
 
                 /*
                  * Replace
@@ -250,11 +251,11 @@ class PrepareData
                  */
                 if (is_array($row[$col->getUniqueId()])) {
                     array_walk_recursive($row[$col->getUniqueId()], function (&$value) {
-                        if (! is_object($value)) {
+                        if (is_string($value)) {
                             $value = trim($value);
                         }
                     });
-                } elseif (! is_object($row[$col->getUniqueId()])) {
+                } elseif (is_string($row[$col->getUniqueId()])) {
                     $row[$col->getUniqueId()] = trim($row[$col->getUniqueId()]);
                 }
 

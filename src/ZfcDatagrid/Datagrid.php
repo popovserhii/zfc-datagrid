@@ -138,6 +138,9 @@ class Datagrid
     protected $isDataLoaded = false;
 
     /** @var bool */
+    protected $dataPreparationEnabled = true;
+
+    /** @var bool */
     protected $isRendered = false;
 
     /** @var string */
@@ -942,6 +945,15 @@ class Datagrid
         return (bool) $this->isDataLoaded;
     }
 
+    /** Configure a new read and invalidate the previously loaded result. */
+    public function setDataPreparationEnabled(bool $enabled): self
+    {
+        $this->dataPreparationEnabled = $enabled;
+        $this->isDataLoaded = false;
+
+        return $this;
+    }
+
     /**
      * Load the data.
      */
@@ -1058,17 +1070,21 @@ class Datagrid
         /*
          * Step 3) Format the data - Translate - Replace - Date / time / datetime - Numbers - ...
          */
-        $prepareData = new PrepareData($data, $this->getColumns());
-        if ($this->getRouter() instanceof RouterInterface) {
-            $prepareData->setRouter($this->getRouter());
-        }
+        if ($this->dataPreparationEnabled) {
+            $prepareData = new PrepareData($data, $this->getColumns());
+            if ($this->getRouter() instanceof RouterInterface) {
+                $prepareData->setRouter($this->getRouter());
+            }
 
-        $prepareData->setRendererName($this->getRendererName());
-        if ($this->hasTranslator()) {
-            $prepareData->setTranslator($this->getTranslator());
+            $prepareData->setRendererName($this->getRendererName());
+            if ($this->hasTranslator()) {
+                $prepareData->setTranslator($this->getTranslator());
+            }
+            $prepareData->prepare();
+            $this->preparedData = $prepareData->getData();
+        } else {
+            $this->preparedData = $data;
         }
-        $prepareData->prepare();
-        $this->preparedData = $prepareData->getData();
 
         $this->isDataLoaded = true;
 
