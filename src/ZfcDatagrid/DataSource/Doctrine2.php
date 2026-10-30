@@ -3,6 +3,7 @@ namespace ZfcDatagrid\DataSource;
 
 use Doctrine\ORM;
 use Doctrine\ORM\Query\Expr;
+use Laminas\Paginator\Adapter\AdapterInterface;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Column\Type;
 use ZfcDatagrid\DataSource\Doctrine2\Paginator as PaginatorAdapter;
@@ -70,6 +71,18 @@ class Doctrine2 extends AbstractDataSource
         }
 
         return $this->sortColumn;
+    }
+
+    /**
+     * Paginate the current query without applying grid columns or conditions.
+     */
+    public function getPaginatorAdapter(): ?AdapterInterface
+    {
+        if ($this->paginatorAdapter === null) {
+            $this->setPaginatorAdapter(new PaginatorAdapter($this->getData()));
+        }
+
+        return parent::getPaginatorAdapter();
     }
 
     /**

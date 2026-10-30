@@ -195,9 +195,10 @@ class PrepareData
                     $row[$col->getUniqueId()] = $dataPopulation->toString();
                 }
 
-                if (! isset($row[$col->getUniqueId()])) {
-                    $row[$col->getUniqueId()] = '';
-                }
+                // For correct JSON-schema, the explicit value must be returned (for example, NULL as well)
+                //if (! isset($row[$col->getUniqueId()])) {
+                //    $row[$col->getUniqueId()] = '';
+                //}
 
                 /*
                  * Replace

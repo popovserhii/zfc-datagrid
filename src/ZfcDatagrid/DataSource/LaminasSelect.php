@@ -3,8 +3,8 @@ namespace ZfcDatagrid\DataSource;
 
 use Laminas\Db\Sql;
 use Laminas\Db\Sql\Expression;
-#use Laminas\Paginator\Adapter\DbSelect as PaginatorAdapter;
-use Laminas\Paginator\Adapter\LaminasDb\DbSelect as PaginatorAdapter;
+use Laminas\Paginator\Adapter\AdapterInterface;
+use Laminas\Paginator\Adapter\DbSelect as PaginatorAdapter;
 use ZfcDatagrid\Column;
 use function sprintf;
 
@@ -104,6 +104,18 @@ class LaminasSelect extends AbstractDataSource
     public function getAdapter(): ?Sql\Sql
     {
         return $this->sqlObject;
+    }
+
+    /**
+     * Paginate the current query without applying grid columns or conditions.
+     */
+    public function getPaginatorAdapter(): ?AdapterInterface
+    {
+        if ($this->paginatorAdapter === null && $this->getAdapter() !== null) {
+            $this->setPaginatorAdapter(new PaginatorAdapter($this->getData(), $this->getAdapter()));
+        }
+
+        return parent::getPaginatorAdapter();
     }
 
     /**

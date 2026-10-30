@@ -289,8 +289,8 @@ class DateTime extends AbstractType
      */
     public function getUserValue($val)
     {
-        if ('' == $val) {
-            return '';
+        if ('' === $val || null === $val) {
+            return $val;
         }
 
         if ($val instanceof PhpDateTime) {
