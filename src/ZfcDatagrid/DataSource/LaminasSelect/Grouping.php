@@ -83,8 +83,15 @@ class Grouping
                 throw new \Exception('This column cannot be grouped: ' . $col->getUniqueId());
             }
 
-            /** @var AbstractColumn $col */
-            $select->group($col->getUniqueId());
+            /* @var $col Column\Select */
+            $colString = $col->getSelectPart1();
+            if ($col->getSelectPart2() != '') {
+                $colString .= '.' . $col->getSelectPart2();
+            }
+
+            /** @var Column\Select $col */
+            //$select->group($col->getUniqueId());
+            $select->group($colString);
         }
     }
 }

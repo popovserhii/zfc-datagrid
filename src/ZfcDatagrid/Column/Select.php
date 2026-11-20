@@ -3,6 +3,8 @@ namespace ZfcDatagrid\Column;
 
 use function is_string;
 use function is_object;
+use function strpos;
+use function substr;
 
 class Select extends AbstractColumn
 {
@@ -79,6 +81,23 @@ class Select extends AbstractColumn
         $this->selectPart2 = $part2;
 
         return $this;
+    }
+
+    public function getMnemonicId(): string
+    {
+        $id = (string) $this->getUniqueId();
+
+        if (is_string($this->selectPart1)) {
+            return is_string($this->selectPart2)
+                ? $this->selectPart1 . '.' . $this->selectPart2
+                : $id;
+        }
+
+        $separator = strpos($id, '_');
+
+        return false === $separator
+            ? $id
+            : substr($id, 0, $separator) . '.' . substr($id, $separator + 1);
     }
 
     /**

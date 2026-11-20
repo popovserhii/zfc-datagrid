@@ -112,6 +112,11 @@ abstract class AbstractColumn
         return $this->uniqueId;
     }
 
+    public function getMnemonicId(): string
+    {
+        return (string) $this->getUniqueId();
+    }
+
     /**
      * @return int|null
      */
