@@ -1,13 +1,14 @@
 <?php
 namespace ZfcDatagrid\DataSource\Doctrine2;
 
-use Doctrine\ORM\Query\Expr;
+use Exception;
+use InvalidArgumentException;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Query\Expr;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Filter as DatagridFilter;
 use ZfcDatagrid\FilterGroup;
 use function sprintf;
-use function str_replace;
 
 class Filter
 {
@@ -15,6 +16,8 @@ class Filter
      * @var QueryBuilder
      */
     private $qb;
+
+    private int $parameterIndex = 0;
 
     /**
      * @param QueryBuilder $qb
@@ -37,32 +40,25 @@ class Filter
         if (!$filterGroup) {
             return;
         }
-        
-        $qb = $this->getQueryBuilder();
+
         if ($expr = $this->applyFilter($filterGroup)) {
-            FilterGroup::COND_AND === $filterGroup->getCondition()
-                ? $qb->andWhere($expr)
-                : $qb->orWhere($expr);
+            $this->getQueryBuilder()->andWhere($expr);
         }
     }
 
     /**
      * @param FilterGroup $filterGroup
      *
-     * @throws \Exception
-     * @return $this
+     * @throws Exception
+     * @return Expr\Andx|Expr\Orx|false
      */
     public function applyFilter(/*DatagridFilter*/ $filterGroup)
     {
-        if (!($filters = $filterGroup->getFilters())) {
-            return false;
-        }
-
         $qb   = $this->getQueryBuilder();
         $expr = $qb->expr();
 
         $clauses = [];
-        foreach ($filters as $i => $filter) {
+        foreach ($filterGroup->getFilters() as $filter) {
             $column = $filter->getColumn();
             if (!$column instanceof Column\Select) {
                 throw new \Exception('This column cannot be filtered: ' . $column->getUniqueId());
@@ -76,8 +72,8 @@ class Filter
             }
 
             $values = $filter->getValues();
-            foreach ($values as $key => $value) {
-                $valueParameterName = ':' . str_replace('.', '', $column->getUniqueId() . $i . $key);
+            foreach ($values as $value) {
+                $valueParameterName = $this->nextParameterName();
                 switch ($filter->getOperator()) {
                     case DatagridFilter::LIKE:
                         $clauses[] = $expr->like($colString, $valueParameterName);
@@ -150,8 +146,8 @@ class Filter
 
                         break 2;
                     case DatagridFilter::BETWEEN:
-                        $minParameterName = ':' . str_replace('.', '', $colString . '0');
-                        $maxParameterName = ':' . str_replace('.', '', $colString . '1');
+                        $minParameterName = $valueParameterName;
+                        $maxParameterName = $this->nextParameterName();
                         $clauses[] = $expr->between($colString, $minParameterName, $maxParameterName);
                         $qb->setParameter($minParameterName, $values[0]);
                         $qb->setParameter($maxParameterName, $values[1]);
@@ -166,28 +162,34 @@ class Filter
 
                         break;
                     default:
-                        throw new \InvalidArgumentException(
+                        throw new InvalidArgumentException(
                             'This operator is currently not supported: ' . $filter->getOperator()
                         );
                 }
             }
         }
 
-        if (! empty($clauses)) {
-            if ($groups = $filterGroup->getGroups()) {
-                foreach ($groups as $group) {
-                    //$exp->add($this->applyFilter($group));
-                    $clauses[] = $this->applyFilter($group);
-                }
+        foreach ($filterGroup->getGroups() as $group) {
+            if ($child = $this->applyFilter($group)) {
+                $clauses[] = $child;
             }
-
-            $expr = FilterGroup::COND_AND === $filterGroup->getCondition()
-                ? $expr->andX()
-                : $expr->orX();
-
-            $expr->addMultiple($clauses);
         }
 
-        return $expr;
+        if (!$clauses) {
+            return false;
+        }
+
+        return FilterGroup::COND_AND === $filterGroup->getCondition()
+            ? $expr->andX(...$clauses)
+            : $expr->orX(...$clauses);
+    }
+
+    private function nextParameterName(): string
+    {
+        do {
+            $name = 'datagridFilter' . $this->parameterIndex++;
+        } while ($this->qb->getParameter($name) !== null);
+
+        return ':' . $name;
     }
 }

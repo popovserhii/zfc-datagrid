@@ -1,15 +1,11 @@
 <?php
 namespace ZfcDatagrid\DataSource\LaminasSelect;
 
-use Laminas\Db\Sql\Predicate\Operator;
+use InvalidArgumentException;
 use Laminas\Db\Sql\Predicate\Predicate;
 use Laminas\Db\Sql\Predicate\PredicateSet;
-//use Laminas\Db\Sql\Predicate\Expression;
-//use Laminas\Db\Sql\Expression;
 use Laminas\Db\Sql\Select;
 use Laminas\Db\Sql\Sql;
-use Laminas\Db\Sql\Where;
-use Laminas\Db\Sql\Having;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Filter as DatagridFilter;
 use ZfcDatagrid\FilterGroup;
@@ -26,16 +22,6 @@ class Filter
      * @var Select
      */
     private $select;
-
-    /**
-     * Mappting of select clauses to real classes.
-     *
-     * @var string[]
-     */
-    private $clauses = [
-        Column\Select::SELECT_СLAUSE_WHERE => Where::class,
-        Column\Select::SELECT_СLAUSE_HAVING => Having::class,
-    ];
 
     /**
      * Filter constructor.
@@ -76,32 +62,44 @@ class Filter
     /**
      * @param FilterGroup $filterGroup
      *
-     * @return $this
+     * @return Select|false
      * @throws \Exception
      */
     public function applyFilter(/*DatagridFilter*/ $filterGroup)
     {
-        if (!($filters = $filterGroup->getFilters())) {
+        $predicates = $this->buildPredicates($filterGroup);
+        if (!$predicates) {
             return false;
         }
 
         $select = $this->getSelect();
+        foreach ($predicates as $type => $predicate) {
+            $select->{$type}->andPredicate($predicate);
+        }
 
+        return $select;
+    }
+
+    /**
+     * @return array<string, PredicateSet>
+     */
+    private function buildPredicates(FilterGroup $filterGroup): array
+    {
         $adapter = $this->getSql()->getAdapter();
         $qi = function ($name) use ($adapter) {
             return $adapter->getPlatform()->quoteIdentifier($name);
         };
 
         $clauses = [];
-        foreach ($filters as $filter) {
+        foreach ($filterGroup->getFilters() as $filter) {
             $column = $filter->getColumn();
-            $clauseType = $column->getFilterSelectСlause();
-            $clauseClass = $this->clauses[$clauseType];
-            /** @var Predicate $clause */
-            $clause = new $clauseClass();
-            
             if (!$column instanceof Column\Select) {
                 throw new \Exception('This column cannot be filtered: ' . $column->getUniqueId());
+            }
+
+            $clauseType = $column->getFilterSelectСlause();
+            if (!in_array($clauseType, [Column\Select::SELECT_СLAUSE_WHERE, Column\Select::SELECT_СLAUSE_HAVING], true)) {
+                throw new InvalidArgumentException('Unsupported filter clause: ' . $clauseType);
             }
 
             $colString = $column->getSelectPart1();
@@ -109,12 +107,13 @@ class Filter
                 $colString .= '.' . $column->getSelectPart2();
             }
 
-            if ($column instanceof Column\Select && $column->hasFilterSelectExpression()) {
+            if ($column->hasFilterSelectExpression()) {
                 $colString = sprintf($column->getFilterSelectExpression(), $colString);
             }
 
             $values = $filter->getValues();
             foreach ($values as $value) {
+                $clause = new Predicate();
                 switch ($filter->getOperator()) {
                     case DatagridFilter::LIKE:
                         $clauses[$clauseType][] = $clause->like($colString, '%' . $value . '%');
@@ -174,33 +173,30 @@ class Filter
                         $clauses[$clauseType][] = $clause->isNull($colString);
                         break;
                     default:
-                        throw new \InvalidArgumentException(
-                            'This operator is currently not supported: ' . $filter->getOperator()
-                        );
+                        throw new InvalidArgumentException('This operator is currently not supported: ' . $filter->getOperator());
                         break;
                 }
             }
         }
 
-        if (!empty($clauses)) {
-            //$set = new PredicateSet($wheres, PredicateSet::OP_OR);
-            //$select->where->andPredicate($set);
-
-
-            if ($groups = $filterGroup->getGroups()) {
-                foreach ($groups as $group) {
-                    $this->applyFilter($group);
-                }
-            }
-
-            foreach ($clauses as $type => $subClauses) {
-                $set = FilterGroup::COND_AND === $filterGroup->getCondition()
-                    ? new PredicateSet($subClauses, PredicateSet::OP_AND)
-                    : new PredicateSet($subClauses, PredicateSet::OP_OR);
-                $select->{$type}->andPredicate($set);
+        foreach ($filterGroup->getGroups() as $group) {
+            foreach ($this->buildPredicates($group) as $type => $predicate) {
+                $clauses[$type][] = $predicate;
             }
         }
 
-        return $select;
+        $combination = FilterGroup::COND_AND === $filterGroup->getCondition()
+            ? PredicateSet::OP_AND
+            : PredicateSet::OP_OR;
+        if ($combination === PredicateSet::OP_OR && count($clauses) > 1) {
+            throw new InvalidArgumentException('A filter group cannot combine WHERE and HAVING predicates with OR.');
+        }
+
+        $predicates = [];
+        foreach ($clauses as $type => $subClauses) {
+            $predicates[$type] = new PredicateSet($subClauses, $combination);
+        }
+
+        return $predicates;
     }
 }
