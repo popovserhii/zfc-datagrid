@@ -63,25 +63,30 @@ class Doctrine2Collection extends AbstractDataSource
 
             $rowExtracted = [];
             foreach ($this->getColumns() as $col) {
-                /* @var $col \ZfcDatagrid\Column\Select */
                 if (! $col instanceof Column\Select) {
                     continue;
                 }
 
-                $part1 = $col->getSelectPart1();
-                $part2 = $col->getSelectPart2();
+                $id = $col->getUniqueId();
+                if (isset($dataExtracted[$id])) {
+                    $rowExtracted[$id] = $dataExtracted[$id];
+                    continue;
+                }
 
+                $part1 = $col->getSelectPart1();
+                if (! is_string($part1)) {
+                    continue;
+                }
+
+                $part2 = $col->getSelectPart2();
                 if (null === $part2) {
                     if (isset($dataExtracted[$part1])) {
-                        $rowExtracted[$col->getUniqueId()] = $dataExtracted[$part1];
+                        $rowExtracted[$id] = $dataExtracted[$part1];
                     }
-                } else {
-                    // NESTED
-                    if (isset($dataExtracted[$part1])) {
-                        $dataExtractedNested = $hydrator->extract($dataExtracted[$part1]);
-                        if (isset($dataExtractedNested[$part2])) {
-                            $rowExtracted[$col->getUniqueId()] = $dataExtractedNested[$part2];
-                        }
+                } elseif (isset($dataExtracted[$part1])) {
+                    $dataExtractedNested = $hydrator->extract($dataExtracted[$part1]);
+                    if (isset($dataExtractedNested[$part2])) {
+                        $rowExtracted[$id] = $dataExtractedNested[$part2];
                     }
                 }
             }
@@ -92,7 +97,7 @@ class Doctrine2Collection extends AbstractDataSource
         $source = new SourceArray($dataPrepared);
         $source->setColumns($this->getColumns());
         $source->setSortConditions($this->getSortConditions());
-        $source->setFilters($this->getFilterGroup());
+        $source->setFilterGroup($this->getFilterGroup());
         $source->execute();
 
         $this->setPaginatorAdapter($source->getPaginatorAdapter());

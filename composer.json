@@ -40,7 +40,7 @@
     "suggest" : {
         "ext-intl": "*",
         "doctrine/doctrine-orm-module": "for doctrine support",
-        "doctrine/doctrine-laminas-hydrator": "^2.0",
+        "doctrine/doctrine-laminas-hydrator": "^2.0 || ^3.4",
         "laminas/laminas-servicemanager": "^3.0",
         "laminas/laminas-mvc": "^3.0",
         "laminas/laminas-session": "^2.7.4",

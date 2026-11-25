@@ -85,7 +85,7 @@ class Grouping
 
             /* @var $col Column\Select */
             $colString = $col->getSelectPart1();
-            if ($col->getSelectPart2() != '') {
+            if (is_string($colString) && $col->getSelectPart2() != '') {
                 $colString .= '.' . $col->getSelectPart2();
             }
 

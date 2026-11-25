@@ -14,6 +14,7 @@
 
 namespace ZfcDatagrid\DataSource\Doctrine2;
 
+use Laminas\Db\Sql\Expression;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM;
 use Doctrine\ORM\Query\Expr;
@@ -74,7 +75,7 @@ class Sorting
 
             /* @var $col Column\Select */
             $colString = $col->getSelectPart1();
-            if ($col->getSelectPart2() != '') {
+            if (is_string($colString) && $col->getSelectPart2() != '') {
                 $colString .= '.' . $col->getSelectPart2();
             }
 

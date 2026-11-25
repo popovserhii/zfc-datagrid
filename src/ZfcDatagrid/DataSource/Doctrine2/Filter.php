@@ -1,6 +1,7 @@
 <?php
 namespace ZfcDatagrid\DataSource\Doctrine2;
 
+use Laminas\Db\Sql\Expression;
 use Exception;
 use InvalidArgumentException;
 use Doctrine\ORM\QueryBuilder;
@@ -64,7 +65,7 @@ class Filter
                 throw new \Exception('This column cannot be filtered: ' . $column->getUniqueId());
             }
             $colString = $column->getSelectPart1();
-            if ($column->getSelectPart2() != '') {
+            if (is_string($colString) && $column->getSelectPart2() != '') {
                 $colString .= '.' . $column->getSelectPart2();
             }
             if ($column instanceof Column\Select && $column->hasFilterSelectExpression()) {

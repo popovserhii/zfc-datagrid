@@ -143,7 +143,7 @@ class LaminasSelect extends AbstractDataSource
             }
 
             $colString = $col->getSelectPart1();
-            if ($col->getSelectPart2() != '') {
+            if (is_string($colString) && $col->getSelectPart2() != '') {
                 $colString = new Expression(
                     sprintf(
                         '%s%s%s',

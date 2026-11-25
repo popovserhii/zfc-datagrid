@@ -103,7 +103,7 @@ class Filter
             }
 
             $colString = $column->getSelectPart1();
-            if ($column->getSelectPart2() != '') {
+            if (is_string($colString) && $column->getSelectPart2() != '') {
                 $colString .= '.' . $column->getSelectPart2();
             }
 

@@ -106,8 +106,10 @@ class PhpArray extends AbstractDataSource
             }
 
             $colString = $col->getSelectPart1();
-            if ($col->getSelectPart2() != '') {
-                $colString = $col->getSelectPart1() . '_' . $col->getSelectPart2();
+            if (! is_string($colString)) {
+                $colString = $col->getUniqueId();
+            } elseif ($col->getSelectPart2() != '') {
+                $colString .= '_' . $col->getSelectPart2();
             }
 
             $selectedColumns[] = $colString;

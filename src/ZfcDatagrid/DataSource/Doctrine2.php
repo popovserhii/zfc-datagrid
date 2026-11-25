@@ -3,6 +3,7 @@ namespace ZfcDatagrid\DataSource;
 
 use Doctrine\ORM;
 use Doctrine\ORM\Query\Expr;
+use Laminas\Db\Sql\Expression;
 use Laminas\Paginator\Adapter\AdapterInterface;
 use ZfcDatagrid\Column;
 use ZfcDatagrid\Column\Type;
@@ -102,7 +103,7 @@ class Doctrine2 extends AbstractDataSource
             }
 
             $colString = $column->getSelectPart1();
-            if ($column->getSelectPart2() != '') {
+            if (is_string($colString) && $column->getSelectPart2() != '') {
                 $colString .= '.' . $column->getSelectPart2();
             }
             $colString .= ' ' . $column->getUniqueId();
